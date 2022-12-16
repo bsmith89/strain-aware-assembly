@@ -19,6 +19,9 @@ from collections import defaultdict
 import difflib
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, cpu_count
+from lib.pandas_util import idxwhere
+from itertools import starmap
+import contextlib
 
 # Graph generation
 
@@ -60,6 +63,9 @@ def single_stranded_graph_with_simulated_depth(paths, depths, length=None, scale
     
     vertex_length = np.array([length[i] for i in range(nvertices)])
 
+    # FIXME: Dimensions seem to break in weird ways when nsamples==1.
+    # NOTE: Hint: That weirdness DOESN'T happen when I manually set g.gp.nsample=1 after
+    # graph building. So maybe it's something about nsamples above being set wrong?
     expected_depths = np.zeros((nsamples, nvertices))
     for p in paths:
         expected_depths[:, paths[p]] += np.outer(np.array(depths[p]) * scale_depth_by, np.ones(len(paths[p])))
@@ -87,6 +93,10 @@ def depth_matrix(g, vs=None, samples=None):
         samples = np.arange(g.gp.nsample)
     depth = g.vp.depth.get_2d_array(samples)
     return depth[:, vs]
+
+
+def ep_as_adjaceny(ep):
+    return sp.sparse.csc_array(gt.spectral.adjacency(ep.get_graph(), weight=ep)).toarray()
 
 
 def total_length_x_depth(g):
@@ -145,93 +155,29 @@ def dotplot(pathA, pathB, ax=None, **scatter_kws):
 def edge_has_no_siblings(g):
     "Check whether upstream or downstream sibling edges exist for every edge."
     vs = g.get_vertices()
-    v_in_degree = g.new_vertex_property('int', vals=g.get_in_degrees(vs))
-    v_out_degree = g.new_vertex_property('int', vals=g.get_out_degrees(vs))
+    v_in_degree = g.degree_property_map('in')
+    v_out_degree = g.degree_property_map('out')
     e_num_in_siblings = gt.edge_endpoint_property(g, v_in_degree, 'target')
     e_num_out_siblings = gt.edge_endpoint_property(g, v_out_degree, 'source')
     e_has_no_sibling_edges = g.new_edge_property('bool', (e_num_in_siblings.a <= 1) & (e_num_out_siblings.a <= 1))
     return e_has_no_sibling_edges
 
 
-def vertex_does_not_have_both_multiple_in_and_multiple_out(g):
-    vs = g.get_vertices()
-    return g.new_vertex_property('bool', vals=(
-        (g.get_in_degrees(vs) <= 1)
-        | (g.get_out_degrees(vs) <= 1)
-    ))
-
-
-def label_maximal_unitigs_old(g):
-    "Assign unitig indices to vertices in maximal unitigs."
-    no_sibling_edges = edge_has_no_siblings(g)
-    # Since any vertex that has both multiple in _and_ multiple out
-    # edges cannot be part of a larger maximal unitig,
-    # we could filter out these vertices, at the same time as we
-    # are filtering out the edges with siblings.
-    # Potentially this would make the component labeling step
-    # much faster.
-    both_sides_branch = vertex_does_not_have_both_multiple_in_and_multiple_out(g)
-    # TODO: Double check, if this has any implications for the
-    # "unitig-ness" of its neighbors. I _think_
-    # if we mark edges with siblings before filtering out
-    # these nodes we should be good.
-    g_filt = gt.GraphView(
-        g,
-        efilt=no_sibling_edges,
-        vfilt=both_sides_branch,
-        directed=True
-    )
-    # g_filt_undirected = gt.GraphView(g_filt, directed=False)
-    # Since we've filtered out the both_sides_branch vertices,
-    # the labels PropertyMap would include a bunch of the default value (0)
-    # for these. Instead, we set everything not labeled to -1, now a magic
-    # value for nodes definitely not in maximal unitigs.
-    labels = g.new_vertex_property('int', val=-1)
-    labels, counts = gt.topology.label_components(g_filt, directed=False, vprop=labels)
-    return labels, counts, g_filt
-
-
 def label_maximal_unitigs(g):
     "Assign unitig indices to vertices in maximal unitigs."
     no_sibling_edges = edge_has_no_siblings(g)
-    # # TODO: Since any vertex that has both multiple in _and_ multiple out
-    # # edges cannot be part of a larger maximal unitig,
-    # # we could filter out these vertices, at the same time as we
-    # # are filtering out the edges with siblings.
-    # # Potentially this would make the component labeling step
-    # # much faster.
-    # both_sides_branch = vertex_does_not_have_both_multiple_in_and_multiple_out(g)
     g_filt = gt.GraphView(
         g,
         efilt=no_sibling_edges,
-        # vfilt=both_sides_branch,
         directed=True
     )
-    # g_filt_undirected = gt.GraphView(g_filt, directed=False)
-    # Since we've filtered out the both_sides_branch vertices,
-    # the labels PropertyMap would include a bunch of the default value (0)
-    # for these. Instead, we set everything not labeled to -1, now a magic
-    # value for nodes definitely not in maximal unitigs.
-    labels = g.new_vertex_property('int', val=-1)
-    labels, counts = gt.topology.label_components(g_filt, directed=False, vprop=labels)
+    labels, counts = gt.topology.label_components(g_filt, directed=False)
     return labels, counts, g_filt
 
 
-# def is_simple_cycle_unitig(g, vfilt):
-#     # TODO: Make this function WAY more efficient.
-#     g_filt = gt.GraphView(g, vfilt=vfilt)
-#     vs = list(g_filt.iter_vertices())
-#     path = list(gt.topology.all_paths(g_filt, vs[0], vs[0]))
-#     if not len(path) == 1:
-#         return False
-#     elif set(path[0]) != set(vs):
-#         return False
-#     else:
-#         return True
-
-    
-def maximal_unitigs(g, include_singletons=False):
+def maximal_unitigs_old(g, include_singletons=False):
     labels, counts, g_filt = label_maximal_unitigs(g)
+    out = []
     for i, c in enumerate(counts):
         if (c == 1) and (not include_singletons):
             continue
@@ -242,13 +188,12 @@ def maximal_unitigs(g, include_singletons=False):
             # the subgraph would no longer be a cycle, otherwise.
             # Pick an arbitrary vertex as the start
             v = next(subgraph.iter_vertices())
-            # Trace a path from v -> v.
-            # Should be only one path, so we'll only generate one iteration.
-            # (TODO: Consider asserting this),
+            # Trace the path from v -> v.
             paths = list(gt.topology.all_paths(subgraph, v, v))
+            # Should be only one path.
             assert len(paths) == 1
             vs = list(paths[0])
-            yield vs[:-1], True
+            out.append((vs[:-1], True))
         else:
             vs = list(gt.topology.topological_sort(subgraph))
             # If there's an edge from the last vertex to the
@@ -256,9 +201,157 @@ def maximal_unitigs(g, include_singletons=False):
             # TODO: Confirm I actually want to report this as
             # a cycle. I may have meant that it's an unbroken cycle...
             if g.edge(vs[-1], vs[0]):
-                yield vs, True
+                out.append((vs, True))
             else:
-                yield vs, False
+                out.append((vs, False))
+    return out
+
+
+def maximal_unitigs(g, include_singletons=False):
+    labels, counts, g_filt = label_maximal_unitigs(g)
+    out = []
+    for i, c in enumerate(counts):
+        if (c == 1) and (not include_singletons):
+            continue
+        vfilt = (labels.a == i)
+        subgraph = gt.GraphView(
+            g,
+            vfilt=vfilt,
+            skip_properties=True,
+            skip_vfilt=True,
+            skip_efilt=True,
+        )
+        if not gt.topology.is_DAG(subgraph):
+            # The subgraph is a cycle.
+            # For some cycles, the start and stop
+            # nodes are arbitrary. This is the
+            # case if we still have a cycle after
+            # removing edges with siblings.
+            # This particular efilt has already been
+            # applied in g_filt, so we'll
+            # test this possibility now.
+            subgraph = gt.GraphView(
+                g_filt,
+                vfilt=vfilt,
+                skip_properties=True,
+                skip_vfilt=True,
+                # NOTE: I'm NOT using skip_efilt here.
+            )
+            if not gt.topology.is_DAG(subgraph):
+                # If it's still a DAG in this subgraph, the
+                # circle is unbroken and therefore the choice of
+                # the first/last v is arbitrary.
+                # NOTE: Another way to do this would be to ask if any nodes have
+                # in-degree/out-degree > 1 in the raw graph.
+                # Pick an arbitrary v.
+                v = next(subgraph.iter_vertices())
+                # Trace the path from v -> v.
+                paths = list(gt.topology.all_paths(subgraph, v, v))
+                # Should be only one path.
+                assert len(paths) == 1
+                vs = list(paths[0])
+                out.append((vs[:-1], True))
+                continue
+        else:
+            vs = list(gt.topology.topological_sort(subgraph))
+            # If there's an edge from the last vertex to the
+            # first in the original graph, then it's a cycle.
+            # TODO: Confirm I actually want to report this as
+            # a cycle. I may have meant that it's an unbroken cycle...
+            if g.edge(vs[-1], vs[0]):
+                out.append((vs, True))
+            else:
+                out.append((vs, False))
+    return out
+
+
+def maximal_unitigs_new(g, include_singletons=False):
+    no_sibling_edges = edge_has_no_siblings(g)
+    g_no_sibling_edges = gt.GraphView(
+        g,
+        efilt=no_sibling_edges,
+        directed=True
+    )
+    isolated_loops = list(gt.topology.all_circuits(g_no_sibling_edges))
+    
+    out = []
+    _mark_isolated_loops = []
+    for vs in isolated_loops:
+        # import pdb; pdb.set_trace()
+        vs = list(vs)
+        if include_singletons or (len(vs) > 1):
+            out.append((vs, True))
+        _mark_isolated_loops.extend(vs)
+    isolated_loop_mask = g_no_sibling_edges.new_vertex_property('bool', val=1)
+    isolated_loop_mask.a[_mark_isolated_loops] = 0
+    
+    g_no_siblings_no_loops = gt.GraphView(
+        g_no_sibling_edges,
+        vfilt=isolated_loop_mask,
+        directed=True
+    )
+    labels1, counts1 = gt.topology.label_components(g_no_siblings_no_loops, directed=False)
+    tsort_idx = gt.topology.topological_sort(g_no_siblings_no_loops)
+    tsort_labels = labels1.a[tsort_idx]
+    for i, c in enumerate(counts1):
+        # import pdb; pdb.set_trace()
+        if (c == 1) and not include_singletons:
+            continue
+        vs = list(tsort_idx[tsort_labels == i])
+        if g.edge(vs[-1], vs[0]):
+            out.append((vs, True))
+        else:
+            out.append((vs, False))
+    return out
+
+
+def maximal_unitigs_new2(g, include_singletons=False):
+    no_sibling_edges = edge_has_no_siblings(g)
+    g_no_sibling_edges = gt.GraphView(
+        g,
+        efilt=no_sibling_edges,
+        directed=True
+    )
+    
+    # NOTE: The below is equivalent to
+    # > isolated_loops = list(gt.topology.all_circuits(g_no_sibling_edges))
+    labels0, counts0 = gt.topology.label_components(g_no_sibling_edges, directed=False)
+    in_degree = g_no_sibling_edges.degree_property_map('in').a
+    out_degree = g_no_sibling_edges.degree_property_map('out').a
+    all_vs = np.arange(len(labels0.a))
+    isolated_loops = []
+    for i, _ in enumerate(counts0):
+        unitig_mask = labels0.a == i
+        if (in_degree[unitig_mask] == 1).all() and (out_degree[unitig_mask] == 1).all():
+            isolated_loops.append(all_vs[unitig_mask])
+    
+    out = []
+    _mark_isolated_loops = []
+    for vs in isolated_loops:
+        vs = list(vs)
+        if include_singletons or (len(vs) > 1):
+            out.append((vs, True))
+        _mark_isolated_loops.extend(vs)
+    isolated_loop_mask = g_no_sibling_edges.new_vertex_property('bool', val=1)
+    isolated_loop_mask.a[_mark_isolated_loops] = 0
+    
+    g_no_siblings_no_loops = gt.GraphView(
+        g_no_sibling_edges,
+        vfilt=isolated_loop_mask,
+        directed=True
+    )
+    labels1, counts1 = gt.topology.label_components(g_no_siblings_no_loops, directed=False)
+    tsort_idx = gt.topology.topological_sort(g_no_siblings_no_loops)
+    tsort_labels = labels1.a[tsort_idx]
+    for i, c in enumerate(counts1):
+        if (c == 1) and not include_singletons:
+            continue
+        vs = list(tsort_idx[tsort_labels == i])
+        if g.edge(vs[-1], vs[0]):
+            out.append((vs, True))
+        else:
+            out.append((vs, False))
+    return out
 
 
 def list_unitig_neighbors(g, vs):
@@ -276,15 +369,21 @@ def mutate_add_compressed_unitig_vertex(g, vs, is_cycle, drop_vs=False):
     g.add_edge_list((v, neighbor) for neighbor in out_neighbors)
     g.vp.length.a[v] = g.vp.length.a[vs].sum()
     g.vp.sequence[v] = reduce(operator.add, (g.vp.sequence[u] for u in vs), [])
-    g.vp.depth[v] = (
+    # FIXME: Can we be more efficient than constantly reloading
+    # the depth matrix for every unitig?
+    old_depths = depth_matrix(g, vs)
+    new_depth = (
         (
-            depth_matrix(g, vs)
+            old_depths
             * g.vp.length.a[vs]
         ).sum(1) / g.vp.length.a[v]
     )
+    g.vp.depth[v] = new_depth
+    # FIXME: Consider dropping this assert.
     assert np.allclose(
-        (depth_matrix(g, vs) * g.vp.length.a[vs]).sum(1),
-        (depth_matrix(g, [v]) * g.vp.length.a[v]).sum(1)
+        (old_depths * g.vp.length.a[vs]).sum(1),
+        # FIXME: Does new_depth need to be reshaped before multiplication?
+        (new_depth.reshape((-1, 1)) * g.vp.length.a[v]).sum(1)
     )
     if is_cycle:
         g.add_edge(v, v)
@@ -303,6 +402,7 @@ def mutate_compress_all_unitigs(g):
     g.remove_vertex(set(all_vs), fast=True)
     # I think, but am not sure, that the number of nodes removed will always equal the number of edges removed.
     return g
+
 
 def label_self_looping_vertices(g):
     return (
@@ -334,7 +434,7 @@ def mutate_extract_singletons(g):
 
 # Flows
 
-def estimate_flow(f0, d, weight=None, eps=1e-2, maxiter=100):
+def estimate_flow_old(f0, d, weight=None, eps=1e-2, maxiter=100):
     if weight is None:
         weight = np.ones_like(d)
 
@@ -350,16 +450,18 @@ def estimate_flow(f0, d, weight=None, eps=1e-2, maxiter=100):
         d_error_in = f_total_in - d
         
         loss_hist.append(np.square(d_error_out).sum() + np.square(d_error_in).sum())
+        if loss_hist[-1] == 0:
+            break  # This should only happen if d is all 0's.
         loss_ratio = (loss_hist[-2] - loss_hist[-1]) / loss_hist[-2]
         if loss_ratio < eps:
             break
             
         # NOTE: Because of errstate, this function is NOT threadsafe.
         # TODO: Determine if it's safe across multiple processes.
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide='ignore', over='ignore'):
             allocation_out = f_out.T * np.nan_to_num(1 / f_total_out, posinf=1, nan=0)
         allocated_d_error_out = (allocation_out * d_error_out).T
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide='ignore', over='ignore'):
             allocation_in = f_in.T * np.nan_to_num(1 / f_total_in, posinf=1, nan=0)
         allocated_d_error_in = (allocation_in * d_error_in).T
 
@@ -372,31 +474,21 @@ def estimate_flow(f0, d, weight=None, eps=1e-2, maxiter=100):
         )
         
         f = (f_out - mean_allocated_d_error)
+        # Very rarely floating point precision results in very small, negative values for f.
+        assert f.min() >= -1e-20
+        # Replace these with 0.
+        f[f < 0] = 0
     else:
         warn(f"loss_ratio < eps ({eps}) not achieved in maxiter ({maxiter}) steps. Final loss_ratio={loss_ratio}. Final loss={loss_hist[-1]}.")
     return f
 
 
-def estimate_all_flows_old(g, eps=1e-3, maxiter=1000, use_weights=True):
-    flows = []
-    if use_weights:
-        weight = g.vp.length.a
-    else:
-        weight = None
-    f0 = sp.sparse.csr_array(gt.spectral.adjacency(g))
-    dd = depth_matrix(g)
-    for sample_idx in range(g.gp.nsample):
-        d = dd[sample_idx]
-        f = estimate_flow(f0, d, weight=weight, eps=eps, maxiter=maxiter)
-        flows.append(f)
-    return flows
+# This is used in the parallel implementation of estimate_all_flows.
+def _estimate_flow_old(kwargs):
+    return estimate_flow_old(**kwargs)
 
 
-def _estimate_flow(kwargs):
-    return estimate_flow(**kwargs)
-
-
-def estimate_all_flows(g, eps=1e-3, maxiter=1000, use_weights=True, jobs=1):
+def estimate_all_flows_old(g, eps=1e-3, maxiter=1000, use_weights=True, jobs=1):
     if jobs != 1:
         pool = Pool(jobs)
         map_f = pool.map
@@ -410,17 +502,18 @@ def estimate_all_flows(g, eps=1e-3, maxiter=1000, use_weights=True, jobs=1):
     f0 = sp.sparse.csr_array(gt.spectral.adjacency(g))
     dd = depth_matrix(g)
     flows = map_f(
-        _estimate_flow,
-        [dict(f0=f0, d=dd[sample_idx], weight=weight, eps=eps, maxiter=maxiter) for sample_idx in range(g.gp.nsample)],
+        _estimate_flow_old,
+        [
+            dict(
+                f0=f0, d=dd[sample_idx], weight=weight, eps=eps, maxiter=maxiter
+            )
+            for sample_idx in range(g.gp.nsample)
+        ],
     )
-    # for sample_idx in range(g.gp.nsample):
-    #     d = dd[sample_idx]
-    #     f = estimate_flow(f0, d, weight=weight, eps=eps, maxiter=maxiter)
-    #     flows.append(f)
     return flows
 
 
-def mutate_add_flows(g, flows):
+def mutate_add_flows_old(g, flows):
     props = []
     for sample_idx, f in enumerate(flows):
         p = g.new_edge_property('float', val=0)
@@ -430,6 +523,66 @@ def mutate_add_flows(g, flows):
     props = gt.group_vector_property(props)
     g.ep['flow'] = props
     return g
+
+
+def estimate_all_flows(g, eps=0.001, maxiter=1000, use_weights=True):
+    if use_weights:
+        weight = g.vp.length
+    else:
+        weight = g.new_vertex_property('float', val=1)
+    target_vertex_weight = gt.edge_endpoint_property(g, weight, 'target')
+    source_vertex_weight = gt.edge_endpoint_property(g, weight, 'source')
+    all_flows = []
+    for i in range(g.gp.nsample):
+        depth = gt.ungroup_vector_property(g.vp.depth, [i])[0]
+        flow = g.new_edge_property('float', val=1)
+        flow.a[:] = 1
+        loss_hist = [np.finfo('float').max]
+        for _ in range(maxiter):
+            total_in_flow = gt.incident_edges_op(g, 'in', 'sum', flow)
+            in_flow_error = g.new_vertex_property('float', vals=depth.a - total_in_flow.a)
+            target_vertex_total_inflow = gt.edge_endpoint_property(g, total_in_flow, 'target')
+            target_vertex_error = gt.edge_endpoint_property(g, in_flow_error, 'target')
+            with np.errstate(divide='ignore', over='ignore', invalid='ignore'):
+                target_vertex_alloc = np.nan_to_num(flow.a / target_vertex_total_inflow.a, posinf=1, nan=0)
+            target_vertex_alloc_error = target_vertex_alloc * target_vertex_error.a
+
+            total_out_flow = gt.incident_edges_op(g, 'out', 'sum', flow)
+            out_flow_error = g.new_vertex_property('float', vals=depth.a - total_out_flow.a)
+            source_vertex_total_outflow = gt.edge_endpoint_property(g, total_out_flow, 'source')
+            source_vertex_error = gt.edge_endpoint_property(g, out_flow_error, 'source')
+            with np.errstate(divide='ignore', over='ignore', invalid='ignore'):
+                source_vertex_alloc = np.nan_to_num(flow.a / source_vertex_total_outflow.a, posinf=1, nan=0)
+            source_vertex_alloc_error = source_vertex_alloc * source_vertex_error.a
+
+            loss_hist.append(np.square(in_flow_error.a).sum() + np.square(out_flow_error.a).sum())
+            if loss_hist[-1] == 0:
+                break  # This should only happen if d is all 0's.
+            loss_ratio = (loss_hist[-2] - loss_hist[-1]) / loss_hist[-2]
+            if loss_ratio < eps:
+                break
+            
+            # FIXME: Catch one of the "invalid value" warnings and see
+            # what's causing it.
+            mean_flow_error = g.new_edge_property(
+                'float',
+                vals=(
+                    (source_vertex_alloc_error * source_vertex_weight.a)
+                    +
+                    (target_vertex_alloc_error * target_vertex_weight.a)
+                )
+                / (source_vertex_weight.a + target_vertex_weight.a)
+            )
+            # NOTE: Having asserted np.isfinite(a).all() for all arrays in the expression
+            # above, I'm sure I don't know what's causing the
+            # "RuntimeWarning: invalid value encountered in divide" I'm getting.
+            flow = g.new_edge_property('float', vals=flow.a + mean_flow_error.a)
+        all_flows.append(flow)
+    return all_flows
+
+
+def mutate_add_flows(g, flows):
+    g.ep['flow'] = gt.group_vector_property(flows)
 
 # Node splitting
 
@@ -450,25 +603,23 @@ def splits_from_sparse_encoding(g, v, threshold=1.):
     out_neighbors_onehot = {k: v for k, v in zip(out_neighbors, np.eye(num_out_neighbors))}
     out_neighbors_onehot[None] = np.zeros(num_out_neighbors)
 
+    # Build observation matrix.
     in_neighbor_flow = []
     for u in in_neighbors:
         in_neighbor_flow.append(g.ep.flow[g.edge(u, v)])
-
     out_neighbor_flow = []
     for w in out_neighbors:
         out_neighbor_flow.append(g.ep.flow[g.edge(v, w)])
+    depth_row = g.vp.depth[v].a
+    obs = np.stack(in_neighbor_flow + [depth_row] + out_neighbor_flow).T
 
+    # Build code matrix.
     in_neighbor_code = []
     out_neighbor_code = []
     split_idx = {}
     for i, (u, w) in enumerate(product(in_neighbors + [None], out_neighbors + [None])):
         if (u, w) == (None, None):
-            # continue
-            # # NOTE: I DON'T include a node-only atom,
-            # # because I'll return this always and I don't want
-            # # to double-count.
-            # FIXME: Trying out a system where I compare the dotproduct for
-            # the naked node to the other dot products.
+            # NOTE: I treat the naked vertex specially.
             naked_vertex_idx = i
             pass
         in_neighbor_code.append(in_neighbors_onehot[u])
@@ -476,9 +627,6 @@ def splits_from_sparse_encoding(g, v, threshold=1.):
         split_idx[i] = (u, w)
     in_neighbor_code = np.stack(in_neighbor_code)
     out_neighbor_code = np.stack(out_neighbor_code)
-
-    depth_row = g.vp.depth[v].a
-    obs = np.stack(in_neighbor_flow + [depth_row] + out_neighbor_flow).T
     unnormalized_code = np.concatenate([
         in_neighbor_code,
         np.ones((in_neighbor_code.shape[0], 1)),
@@ -486,7 +634,6 @@ def splits_from_sparse_encoding(g, v, threshold=1.):
     ], axis=1)
     code_magnitude = np.sqrt(np.square(unnormalized_code).sum(1, keepdims=True))
     code = unnormalized_code / code_magnitude
-
 
     # Group Matching Pursuit (GMP)
     # Inspired by https://arxiv.org/pdf/1812.10538.pdf
@@ -513,20 +660,21 @@ def splits_from_sparse_encoding(g, v, threshold=1.):
         resid = obs - normalized_encoding @ code
         
 
-    # Iterate through atoms as splits.
+    # Iterate through selected atoms as splits.
     encoding = normalized_encoding / code_magnitude.T
-    # import pdb; pdb.set_trace()
+    out = []
     for i in atoms:
         if i == naked_vertex_idx:
             # Don't return the naked vertex here. It'll be returned
             # later.
             continue
         u, w = split_idx[i]
-        yield Split(u, v, w), g.vp.length[v], encoding[:, i]
+        out.append((Split(u, v, w), g.vp.length[v], encoding[:, i]))
     # Remaining depth must also include any depth assigned to the naked encoding.
     remaining_depth = g.vp.depth[v] - encoding.sum(1) + encoding[:, naked_vertex_idx]
     if not np.allclose(remaining_depth, 0):
-        yield Split(None, v, None), g.vp.length[v], remaining_depth
+        out.append((Split(None, v, None), g.vp.length[v], remaining_depth))
+    return out
         
         
 def build_tables_from_splits(split_list, start_idx):
@@ -553,25 +701,27 @@ def build_tables_from_splits(split_list, start_idx):
         
         
 def new_edges_from_splits(split_list, split_idx, upstream, downstream, start_idx):
+    out = []
     for v, (split, _, _) in enumerate(split_list, start=start_idx):
         u_old, v_old, w_old = split
         v = split_idx[split]
         
         # Upstream edges
         if u_old is not None:
-            yield (u_old, v)
+            out.append((u_old, v))
         for upstream_split in upstream[(u_old, v_old)]:
             u = split_idx[upstream_split]
             if u is not None:
-                yield (u, v)
+                out.append((u, v))
             
         # Downstream edges
         if w_old is not None:
-            yield (v, w_old)
+            out.append((v, w_old))
         for downstream_split in downstream[(v_old, w_old)]:
             w = split_idx[downstream_split]
             if w is not None:
-                yield (v, w)
+                out.append((v, w))
+    return out
             
             
 def mutate_apply_splits(g, split_list):
@@ -586,9 +736,6 @@ def mutate_apply_splits(g, split_list):
         split_list, split_idx, upstream, downstream, start_idx
     )))
     
-    # FIXME:
-    g_old = g.copy()
-    
     # NOTE: Without adding vertices before edges I can get an IndexError
     # running `g.vp.length.a[np.arange(len(lengths)) + start_idx]`.
     # I believe this is because one or more split nodes
@@ -599,8 +746,8 @@ def mutate_apply_splits(g, split_list):
     # The result is that I'm missing nodes that should actually exist.
     # NOTE: This line returns an unassigned generator. I _think_ all the
     # nodes are still added, but it's not entirely clear.
-    # UPDATE: I'm sure the nodes are still added because of the following
-    # assert.
+    # UPDATE: I'm sure the nodes are still added because of the
+    # assert afterwards.
     g.add_vertex(n=max(split_idx.values()) - max(g.get_vertices()))
     g.add_edge_list(set(edges_to_add))
     assert max(g.get_vertices()) == max(split_idx.values())
@@ -618,13 +765,31 @@ def mutate_apply_splits(g, split_list):
     return g
 
 
-def splits_for_all_vertices(g, split_func):
+def splits_for_all_vertices_old(g, split_func):
+    out = []
     for v in g.vertices():
         if (v.in_degree() < 2) and (v.out_degree() < 2):
             continue
         else:
-            yield from split_func(g, v)
+            out.extend(split_func(g, v))
+    return out
 
+
+def splits_for_all_vertices(g, split_func, jobs=1):
+    if jobs != 1:
+        pool = Pool(jobs)
+        map_f = pool.starmap
+    else:
+        map_f = lambda *args, **kwargs: list(starmap(*args, **kwargs))
+        
+    # NOTE: I _think_ this is why my splits sometimes have integer u and w,
+    # but vertex(v).
+    # TODO: Consider using int(v) instead of v, for consistency with other
+    # code.
+    non_linear_vs = [int(v) for v in g.vertices() if (v.in_degree() >= 2) or (v.out_degree() >= 2)]
+    splits = map_f(split_func, [(g, v) for v in non_linear_vs])
+    return list(itertools.chain.from_iterable(splits))
+            
 
 def mutate_split_all_nodes(g, split_func):
     # TODO: Vertices with <= 1 local path will be split into just
