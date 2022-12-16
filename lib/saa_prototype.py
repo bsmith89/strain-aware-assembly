@@ -175,137 +175,7 @@ def label_maximal_unitigs(g):
     return labels, counts, g_filt
 
 
-def maximal_unitigs_old(g, include_singletons=False):
-    labels, counts, g_filt = label_maximal_unitigs(g)
-    out = []
-    for i, c in enumerate(counts):
-        if (c == 1) and (not include_singletons):
-            continue
-        subgraph = gt.GraphView(g_filt, vfilt=(labels.a == i))
-        if not gt.topology.is_DAG(subgraph):
-            # It's a cycle
-            # (and an independent component, at that, since
-            # the subgraph would no longer be a cycle, otherwise.
-            # Pick an arbitrary vertex as the start
-            v = next(subgraph.iter_vertices())
-            # Trace the path from v -> v.
-            paths = list(gt.topology.all_paths(subgraph, v, v))
-            # Should be only one path.
-            assert len(paths) == 1
-            vs = list(paths[0])
-            out.append((vs[:-1], True))
-        else:
-            vs = list(gt.topology.topological_sort(subgraph))
-            # If there's an edge from the last vertex to the
-            # first in the original graph, then it's a cycle.
-            # TODO: Confirm I actually want to report this as
-            # a cycle. I may have meant that it's an unbroken cycle...
-            if g.edge(vs[-1], vs[0]):
-                out.append((vs, True))
-            else:
-                out.append((vs, False))
-    return out
-
-
 def maximal_unitigs(g, include_singletons=False):
-    labels, counts, g_filt = label_maximal_unitigs(g)
-    out = []
-    for i, c in enumerate(counts):
-        if (c == 1) and (not include_singletons):
-            continue
-        vfilt = (labels.a == i)
-        subgraph = gt.GraphView(
-            g,
-            vfilt=vfilt,
-            skip_properties=True,
-            skip_vfilt=True,
-            skip_efilt=True,
-        )
-        if not gt.topology.is_DAG(subgraph):
-            # The subgraph is a cycle.
-            # For some cycles, the start and stop
-            # nodes are arbitrary. This is the
-            # case if we still have a cycle after
-            # removing edges with siblings.
-            # This particular efilt has already been
-            # applied in g_filt, so we'll
-            # test this possibility now.
-            subgraph = gt.GraphView(
-                g_filt,
-                vfilt=vfilt,
-                skip_properties=True,
-                skip_vfilt=True,
-                # NOTE: I'm NOT using skip_efilt here.
-            )
-            if not gt.topology.is_DAG(subgraph):
-                # If it's still a DAG in this subgraph, the
-                # circle is unbroken and therefore the choice of
-                # the first/last v is arbitrary.
-                # NOTE: Another way to do this would be to ask if any nodes have
-                # in-degree/out-degree > 1 in the raw graph.
-                # Pick an arbitrary v.
-                v = next(subgraph.iter_vertices())
-                # Trace the path from v -> v.
-                paths = list(gt.topology.all_paths(subgraph, v, v))
-                # Should be only one path.
-                assert len(paths) == 1
-                vs = list(paths[0])
-                out.append((vs[:-1], True))
-                continue
-        else:
-            vs = list(gt.topology.topological_sort(subgraph))
-            # If there's an edge from the last vertex to the
-            # first in the original graph, then it's a cycle.
-            # TODO: Confirm I actually want to report this as
-            # a cycle. I may have meant that it's an unbroken cycle...
-            if g.edge(vs[-1], vs[0]):
-                out.append((vs, True))
-            else:
-                out.append((vs, False))
-    return out
-
-
-def maximal_unitigs_new(g, include_singletons=False):
-    no_sibling_edges = edge_has_no_siblings(g)
-    g_no_sibling_edges = gt.GraphView(
-        g,
-        efilt=no_sibling_edges,
-        directed=True
-    )
-    isolated_loops = list(gt.topology.all_circuits(g_no_sibling_edges))
-    
-    out = []
-    _mark_isolated_loops = []
-    for vs in isolated_loops:
-        # import pdb; pdb.set_trace()
-        vs = list(vs)
-        if include_singletons or (len(vs) > 1):
-            out.append((vs, True))
-        _mark_isolated_loops.extend(vs)
-    isolated_loop_mask = g_no_sibling_edges.new_vertex_property('bool', val=1)
-    isolated_loop_mask.a[_mark_isolated_loops] = 0
-    
-    g_no_siblings_no_loops = gt.GraphView(
-        g_no_sibling_edges,
-        vfilt=isolated_loop_mask,
-        directed=True
-    )
-    labels1, counts1 = gt.topology.label_components(g_no_siblings_no_loops, directed=False)
-    tsort_idx = gt.topology.topological_sort(g_no_siblings_no_loops)
-    tsort_labels = labels1.a[tsort_idx]
-    for i, c in enumerate(counts1):
-        # import pdb; pdb.set_trace()
-        if (c == 1) and not include_singletons:
-            continue
-        vs = list(tsort_idx[tsort_labels == i])
-        if g.edge(vs[-1], vs[0]):
-            out.append((vs, True))
-        else:
-            out.append((vs, False))
-    return out
-
-
-def maximal_unitigs_new2(g, include_singletons=False):
     no_sibling_edges = edge_has_no_siblings(g)
     g_no_sibling_edges = gt.GraphView(
         g,
@@ -361,7 +231,9 @@ def list_unitig_neighbors(g, vs):
     return list(set(all_ins) - set(vs)), list(set(all_outs) - set(vs))
 
 
-def mutate_add_compressed_unitig_vertex(g, vs, is_cycle, drop_vs=False):
+def mutate_add_compressed_unitig_vertex(g, vs, is_cycle, old_depths=None, drop_vs=False):
+    if old_depths is None:
+        old_depths = depth_matrix(g, vs)
     v = int(g.add_vertex())
     nsample = g.gp.nsample
     in_neighbors, out_neighbors = list_unitig_neighbors(g, vs)
@@ -369,9 +241,6 @@ def mutate_add_compressed_unitig_vertex(g, vs, is_cycle, drop_vs=False):
     g.add_edge_list((v, neighbor) for neighbor in out_neighbors)
     g.vp.length.a[v] = g.vp.length.a[vs].sum()
     g.vp.sequence[v] = reduce(operator.add, (g.vp.sequence[u] for u in vs), [])
-    # FIXME: Can we be more efficient than constantly reloading
-    # the depth matrix for every unitig?
-    old_depths = depth_matrix(g, vs)
     new_depth = (
         (
             old_depths
@@ -395,9 +264,10 @@ def mutate_add_compressed_unitig_vertex(g, vs, is_cycle, drop_vs=False):
 def mutate_compress_all_unitigs(g):
     unitig_list = maximal_unitigs(g, include_singletons=False)
     all_vs = []
+    old_depths = depth_matrix(g)
     for i, (vs, is_cycle) in enumerate(unitig_list):
         assert len(vs) > 1  # All len(vs) == 1 should be removed by include_singletons=False.
-        mutate_add_compressed_unitig_vertex(g, vs, is_cycle)
+        mutate_add_compressed_unitig_vertex(g, vs, is_cycle, old_depths=old_depths[:, vs])
         all_vs.extend(vs)
     g.remove_vertex(set(all_vs), fast=True)
     # I think, but am not sure, that the number of nodes removed will always equal the number of edges removed.
