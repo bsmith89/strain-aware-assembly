@@ -22,6 +22,7 @@ from multiprocessing import Pool, cpu_count
 from lib.pandas_util import idxwhere
 from itertools import starmap
 import contextlib
+import warnings
 
 # Graph generation
 
@@ -293,7 +294,7 @@ def describe_nodes(g):
         sequence=[g.vp.sequence[v] for v in g.iter_vertices()],
     ))
     depth = pd.DataFrame(depth_matrix(g).T)
-    return description.join(depth)
+    return description.join(depth).assign(magnitude=depth.sum(1) * description.length)
 
 
 def mutate_extract_singletons(g):
@@ -432,20 +433,20 @@ def estimate_all_flows(g, eps=0.001, maxiter=1000, use_weights=True):
             if loss_ratio < eps:
                 break
             
-            # FIXME: Catch one of the "invalid value" warnings and see
-            # what's causing it.
-            mean_flow_error = g.new_edge_property(
-                'float',
-                vals=(
-                    (source_vertex_alloc_error * source_vertex_weight.a)
-                    +
-                    (target_vertex_alloc_error * target_vertex_weight.a)
+            with np.errstate(divide='ignore', over='ignore', invalid='ignore'):
+                # NOTE: Some values of (source_vertex_weight.a + target_vertex_weight.a)
+                # are 0 because these two edge_properties include edge indices
+                # for non-existent edges.
+                # TODO: Consider running gt.reindex_edges to get rid of these.
+                mean_flow_error = g.new_edge_property(
+                    'float',
+                    vals=(
+                        (source_vertex_alloc_error * source_vertex_weight.a)
+                        +
+                        (target_vertex_alloc_error * target_vertex_weight.a)
+                    )
+                    / (source_vertex_weight.a + target_vertex_weight.a)
                 )
-                / (source_vertex_weight.a + target_vertex_weight.a)
-            )
-            # NOTE: Having asserted np.isfinite(a).all() for all arrays in the expression
-            # above, I'm sure I don't know what's causing the
-            # "RuntimeWarning: invalid value encountered in divide" I'm getting.
             flow = g.new_edge_property('float', vals=flow.a + mean_flow_error.a)
         all_flows.append(flow)
     return all_flows
@@ -482,6 +483,8 @@ def splits_from_sparse_encoding(g, v, threshold=1.):
         out_neighbor_flow.append(g.ep.flow[g.edge(v, w)])
     depth_row = g.vp.depth[v].a
     obs = np.stack(in_neighbor_flow + [depth_row] + out_neighbor_flow).T
+    assert obs.min() > -1e-20
+    obs[obs < 0] = 0
 
     # Build code matrix.
     in_neighbor_code = []
@@ -528,7 +531,6 @@ def splits_from_sparse_encoding(g, v, threshold=1.):
         dictionary[atoms[-1]] = code[atoms[-1]]
         normalized_encoding, _, _ = non_negative_factorization(obs, n_components=dictionary.shape[0], H=dictionary, update_H=False, alpha_W=0)
         resid = obs - normalized_encoding @ code
-        
 
     # Iterate through selected atoms as splits.
     encoding = normalized_encoding / code_magnitude.T
@@ -669,3 +671,44 @@ def mutate_split_all_nodes(g, split_func):
     if len(split_list) > 0:
         g = mutate_apply_splits(g, split_list=split_list)
     return g
+
+
+def mutate_run_workflow(g, thresh, maxiter=20):
+    mutate_compress_all_unitigs(g)
+    num_edges, num_vertices = g.num_edges(), g.num_vertices()
+    print(f"START: Compressed graph has vertices: {num_vertices} and edges: {num_edges}.")
+    extracted_seqs = []
+    for i in range(maxiter):
+        mutate_add_flows(g, estimate_all_flows(g, use_weights=True))
+        print("Finished estimating flow.")
+        mutate_split_all_nodes(g, partial(splits_from_sparse_encoding, threshold=thresh))
+        print("Finished splitting nodes.")
+        mutate_compress_all_unitigs(g)
+        print("Finished compressing unitigs.")
+        _, singletons = mutate_extract_singletons(g)
+        singletons['extraction_round'] = i
+        extracted_seqs.append(singletons)
+        num_singletons = singletons.shape[0]
+        print(f"Finished removing {num_singletons} singleton vertices from the graph.")
+        new_num_edges = g.num_edges()
+        new_num_vertices = g.num_vertices()
+        if (
+            (new_num_vertices == 0)
+            or (
+                (new_num_edges == num_edges)
+                and (new_num_vertices == num_vertices)
+            )
+        ):
+            print(f"DONE: Converged at round {i}, compressed graph has vertices: {new_num_vertices} and edges: {new_num_edges}.")
+            break
+        num_edges = new_num_edges
+        num_vertices = new_num_vertices
+        print(f"After round {i}, compressed graph has vertices: {num_vertices} and edges: {num_edges}.")
+    else:
+        print("DONE: Maximum iteration reached.")
+    last_extraction = describe_nodes(g)
+    last_extraction['extraction_round'] = -1
+    num_last_extraction = last_extraction.shape[0]
+    print(f"Final graph has {num_last_extraction} vertices remaining.")
+    extracted_seqs = pd.concat(extracted_seqs + [last_extraction]).reset_index(drop=True)
+    return g, extracted_seqs.sort_values('magnitude', ascending=False)
