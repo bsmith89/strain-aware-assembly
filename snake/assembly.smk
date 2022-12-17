@@ -31,6 +31,24 @@ rule alias_genbank_genome:
     shell: alias_recipe
 
 
+rule merge_ecoli_strains:
+    output: "data/both_strains.fn"
+    input:
+        "data/genbank/ecoli.mg1655.fn",
+        "data/genbank/ecoli.o121h19.fn",
+    shell:
+        "cat {input} > {output}"
+
+
+rule merge_ecoli_and_bdorei:
+    output: "data/both_species.fn"
+    input:
+        "data/genbank/ecoli.mg1655.fn",
+        "data/genbank/bdorei.dsm17855.fn",
+    shell:
+        "cat {input} > {output}"
+
+
 rule run_bcalm:
     output: '{stem}.bcalm-k{ksize}.fn'
     input: '{stem}.fn'
