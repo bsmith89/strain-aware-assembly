@@ -23,6 +23,7 @@ from lib.pandas_util import idxwhere
 from itertools import starmap
 import contextlib
 import warnings
+from lib.util import info
 
 # Graph generation
 
@@ -674,41 +675,41 @@ def mutate_split_all_nodes(g, split_func):
 
 
 def mutate_run_workflow(g, thresh, maxiter=20):
+    num_edges, num_vertices = g.num_edges(), g.num_vertices()
+    info(f"START (vertices: {num_vertices} edges: {num_edges}).")
     mutate_compress_all_unitigs(g)
     num_edges, num_vertices = g.num_edges(), g.num_vertices()
-    print(f"START: Compressed graph has vertices: {num_vertices} and edges: {num_edges}.")
+    info(f"Finished compressing unitigs (vertices: {num_vertices} edges: {num_edges}).")
     extracted_seqs = []
     for i in range(maxiter):
+        previous_num_edges, previous_num_vertices = num_edges, num_vertices
         mutate_add_flows(g, estimate_all_flows(g, use_weights=True))
-        print("Finished estimating flow.")
+        info("Finished estimating flow.")
         mutate_split_all_nodes(g, partial(splits_from_sparse_encoding, threshold=thresh))
-        print("Finished splitting nodes.")
+        num_edges, num_vertices = g.num_edges(), g.num_vertices()
+        info(f"Finished splitting nodes (vertices: {num_vertices} edges: {num_edges}).")
         mutate_compress_all_unitigs(g)
-        print("Finished compressing unitigs.")
+        num_edges, num_vertices = g.num_edges(), g.num_vertices()
+        info(f"Finished compressing unitigs (vertices: {num_vertices} edges: {num_edges}).")
         _, singletons = mutate_extract_singletons(g)
         singletons['extraction_round'] = i
         extracted_seqs.append(singletons)
-        num_singletons = singletons.shape[0]
-        print(f"Finished removing {num_singletons} singleton vertices from the graph.")
-        new_num_edges = g.num_edges()
-        new_num_vertices = g.num_vertices()
+        num_edges, num_vertices = g.num_edges(), g.num_vertices()
+        info(f"Finished extracting singletons (vertices: {num_vertices} edges: {num_edges}).")
         if (
-            (new_num_vertices == 0)
+            (num_vertices == 0)
             or (
-                (new_num_edges == num_edges)
-                and (new_num_vertices == num_vertices)
+                (num_edges == previous_num_edges)
+                and (num_vertices == previous_num_vertices)
             )
         ):
-            print(f"DONE: Converged at round {i}, compressed graph has vertices: {new_num_vertices} and edges: {new_num_edges}.")
+            info(f"DONE: Converged at round {i}.")
             break
-        num_edges = new_num_edges
-        num_vertices = new_num_vertices
-        print(f"After round {i}, compressed graph has vertices: {num_vertices} and edges: {num_edges}.")
     else:
-        print("DONE: Maximum iteration reached.")
+        info("DONE: Maximum iteration reached.")
     last_extraction = describe_nodes(g)
     last_extraction['extraction_round'] = -1
     num_last_extraction = last_extraction.shape[0]
-    print(f"Final graph has {num_last_extraction} vertices remaining.")
+    info(f"Final graph has {num_last_extraction} vertices remaining.")
     extracted_seqs = pd.concat(extracted_seqs + [last_extraction]).reset_index(drop=True)
     return g, extracted_seqs.sort_values('magnitude', ascending=False)
