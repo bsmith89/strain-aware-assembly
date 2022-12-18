@@ -2,6 +2,19 @@ use rule start_shell as start_shell_bcalm with:
     conda:
         "conda/bcalm.yaml"
 
+
+use rule start_shell as start_shell_jfish with:
+    conda:
+        "conda/jellyfish.yaml"
+
+
+# FIXME: Cannot get python bindings to work.
+use rule install_jupyter_kernel_default as install_jupyter_kernel_jfish with:
+    params:
+        name='jfish'
+    conda:
+        "conda/jellyfish.yaml"
+
 def genbank_genomic_ftp_url(accession, assembly):
     prefix=accession[:3]
     n1to3=accession[4:7]
@@ -77,3 +90,32 @@ rule convert_bcalm_to_gfa:
     params:
         ksize=lambda w: int(w.ksize),
     shell: "{input.script} {input.fn} {output} {params.ksize}"
+
+
+rule run_jellyfish_count:
+    output: "{stem}.jfish-k{ksize}.jf"
+    input: "{stem}.fn"
+    params:
+        ksize=lambda w: int(w.ksize),
+    threads: 4
+    conda: 'conda/jellyfish.yaml'
+    shell:
+        """
+        jellyfish count \
+            --size 100M \
+            --mer-len={params.ksize} \
+            --threads={threads} \
+            --canonical \
+            --lower-count=0 \
+            --output={output} \
+            {input}
+        """
+
+rule dump_jellyfish_kmer_counts:
+    output: "{stem}.kmer-k{ksize}.counts.tsv"
+    input: "{stem}.jfish-k{ksize}.jf"
+    conda: "conda/jellyfish.yaml"
+    shell:
+        """
+        jellyfish dump --column --tab --output={output} {input}
+        """
