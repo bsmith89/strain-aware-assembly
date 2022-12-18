@@ -1,0 +1,3 @@
+[submodule "include/Jellyfish"]
+	path = include/Jellyfish
+	url = https://github.com/gmarcais/Jellyfish
