@@ -32,14 +32,12 @@ localrules: download_genbank_genome
 
 
 def alias_genbank_genome_input(w):
-    species_id = w.species_id
-    strain = w.strain
-    accession, assembly = config['genomes'].loc[(species_id, strain)][['genbank', 'assembly']]
+    accession, assembly = config['genomes'].loc[(w.species, w.strain)][['genbank', 'assembly']]
     return f'raw/genbank/{accession}_{assembly}.fn'
 
 
 rule alias_genbank_genome:
-    output: 'data/genbank/{species_id}.{strain}.fn'
+    output: 'data/genbank/{species}.{strain}.fn'
     input: alias_genbank_genome_input
     shell: alias_recipe
 
