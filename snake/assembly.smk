@@ -60,6 +60,16 @@ rule merge_ecoli_and_bdorei:
         "cat {input} > {output}"
 
 
+rule merge_two_ecoli_and_bdorei:
+    output: "data/three_genomes.fn"
+    input:
+        "data/genbank/ecoli.mg1655.fn",
+        "data/genbank/ecoli.o121h19.fn",
+        "data/genbank/bdorei.dsm17855.fn",
+    shell:
+        "cat {input} > {output}"
+
+
 rule run_bcalm:
     output: '{stem}.bcalm-k{ksize}.fn'
     input: '{stem}.fn'
