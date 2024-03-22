@@ -59,37 +59,48 @@ use rule install_jupyter_kernel_native as install_jupyter_kernel_jfish with:
 
 
 def genbank_genomic_ftp_url(accession, assembly):
-    prefix=accession[:3]
-    n1to3=accession[4:7]
-    n4to6=accession[7:10]
-    n7to9=accession[10:13]
-    return f'https://ftp.ncbi.nlm.nih.gov/genomes/all/{prefix}/{n1to3}/{n4to6}/{n7to9}/{accession}_{assembly}/{accession}_{assembly}_genomic.fna.gz'
+    prefix = accession[:3]
+    n1to3 = accession[4:7]
+    n4to6 = accession[7:10]
+    n7to9 = accession[10:13]
+    return f"https://ftp.ncbi.nlm.nih.gov/genomes/all/{prefix}/{n1to3}/{n4to6}/{n7to9}/{accession}_{assembly}/{accession}_{assembly}_genomic.fna.gz"
 
 
 # e.g. https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/512/915/GCA_000512915.1_ASM51291v1/GCA_000512915.1_ASM51291v1_genomic.fna.gz
 
 
 rule download_genbank_genome:
-    output: 'raw/genbank/{accession}_{assembly}.fn'
+    output:
+        "raw/genbank/{accession}_{assembly}.fn",
     params:
-        url=lambda w: genbank_genomic_ftp_url(w.accession, w.assembly)
-    shell: "curl '{params.url}' | zcat > {output}"
-localrules: download_genbank_genome
+        url=lambda w: genbank_genomic_ftp_url(w.accession, w.assembly),
+    shell:
+        "curl '{params.url}' | zcat > {output}"
+
+
+localrules:
+    download_genbank_genome,
 
 
 def alias_genbank_genome_input(w):
-    accession, assembly = config['genomes'].loc[(w.species, w.strain)][['genbank', 'assembly']]
-    return f'raw/genbank/{accession}_{assembly}.fn'
+    accession, assembly = config["genomes"].loc[(w.species, w.strain)][
+        ["genbank", "assembly"]
+    ]
+    return f"raw/genbank/{accession}_{assembly}.fn"
 
 
 rule alias_genbank_genome:
-    output: 'data/genbank/{species}.{strain}.fn'
-    input: alias_genbank_genome_input
-    shell: alias_recipe
+    output:
+        "data/genbank/{species}.{strain}.fn",
+    input:
+        alias_genbank_genome_input,
+    shell:
+        alias_recipe
 
 
 rule merge_ecoli_strains:
-    output: "data/both_strains.fn"
+    output:
+        "data/both_strains.fn",
     input:
         "data/genbank/ecoli.mg1655.fn",
         "data/genbank/ecoli.o121h19.fn",
@@ -98,7 +109,8 @@ rule merge_ecoli_strains:
 
 
 rule merge_ecoli_and_bdorei:
-    output: "data/both_species.fn"
+    output:
+        "data/both_species.fn",
     input:
         "data/genbank/ecoli.mg1655.fn",
         "data/genbank/bdorei.dsm17855.fn",
@@ -107,7 +119,8 @@ rule merge_ecoli_and_bdorei:
 
 
 rule merge_two_ecoli_and_bdorei:
-    output: "data/three_genomes.fn"
+    output:
+        "data/three_genomes.fn",
     input:
         "data/genbank/ecoli.mg1655.fn",
         "data/genbank/ecoli.o121h19.fn",
@@ -117,12 +130,15 @@ rule merge_two_ecoli_and_bdorei:
 
 
 rule run_bcalm:
-    output: '{stem}.bcalm-k{ksize}.fn'
-    input: '{stem}.fn'
+    output:
+        "{stem}.bcalm-k{ksize}.fn",
+    input:
+        "{stem}.fn",
     params:
-        outprefix='{stem}.bcalm-k{ksize}',
+        outprefix="{stem}.bcalm-k{ksize}",
         ksize=lambda w: int(w.ksize),
-    conda: 'conda/bcalm.yaml'
+    conda:
+        "conda/bcalm.yaml"
     threads: 24
     shell:
         """
@@ -155,6 +171,7 @@ rule construct_mgen_group_input_table:
         """
         for mgen in {params.mgen_list}; do echo "{params.entry_pattern}"; done > {output}
         """
+
 
 rule construct_three_genome_input_table:
     output:
@@ -200,7 +217,8 @@ rule run_kmtricks_pipeline:
 
 
 rule load_kmtricks_output_to_sqlite:
-    output: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db"
+    output:
+        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
     input:
         script="scripts/sample_list_to_sqlite_table_script.py",
         counts="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
@@ -217,7 +235,8 @@ rule load_kmtricks_output_to_sqlite:
 rule run_ggcat_on_kmtricks_kmers:
     output:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn",
-    input: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
+    input:
+        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
     container:
         config["container"]["ggcat"]
     threads: 24
@@ -239,19 +258,24 @@ rule run_ggcat_on_kmtricks_kmers:
         rm -r $fifo_dir
         """
 
+
 rule convert_bcalm_to_gfa:
-    output: "{stem}.bcalm-k{ksize}.gfa"
+    output:
+        "{stem}.bcalm-k{ksize}.gfa",
     input:
-        script='scripts/bcalm_to_gfa.py',
+        script="scripts/bcalm_to_gfa.py",
         fn="{stem}.bcalm-k{ksize}.fn",
     params:
         ksize=lambda w: int(w.ksize),
-    shell: "{input.script} {input.fn} {output} {params.ksize}"
+    shell:
+        "{input.script} {input.fn} {output} {params.ksize}"
 
 
 rule run_jellyfish_count:
-    output: "{stem}.jfish-k{ksize}.jf"
-    input: "{stem}.fn"
+    output:
+        "{stem}.jfish-k{ksize}.jf",
+    input:
+        "{stem}.fn",
     params:
         ksize=lambda w: int(w.ksize),
     threads: 4

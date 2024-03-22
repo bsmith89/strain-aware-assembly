@@ -264,7 +264,9 @@ rule gather_all_mgen_from_mgen_group:
     output:
         touch("data/group/{group}/a.{stem}.ALL_MGEN.flag"),
     input:
-        lambda w: [f"data/reads/{mgen}/r.{{stem}}" for mgen in config["mgen_group"][w.group]],
+        lambda w: [
+            f"data/reads/{mgen}/r.{{stem}}" for mgen in config["mgen_group"][w.group]
+        ],
     shell:
         "touch {output}"
 
