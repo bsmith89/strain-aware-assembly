@@ -152,6 +152,29 @@ rule run_bcalm:
         """
 
 
+rule run_bcalm_on_fq_gz:
+    output:
+        "{stem}.bcalm-k{ksize}.fn",
+    input:
+        "{stem}.fq.gz",
+    params:
+        outprefix="{stem}.bcalm-k{ksize}",
+        ksize=lambda w: int(w.ksize),
+    conda:
+        "conda/bcalm.yaml"
+    threads: 24
+    shell:
+        """
+        bcalm \
+            -nb-cores {threads} \
+            -in {input} \
+            -kmer-size {params.ksize} \
+            -abundance-min 1 \
+            -out {params.outprefix}
+        mv {params.outprefix}.unitigs.fa {output}
+        """
+
+
 rule construct_mgen_group_input_table:
     output:
         "data/group/{group}/r.proc.kmtricks_input.txt",
