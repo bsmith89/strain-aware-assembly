@@ -175,6 +175,77 @@ rule run_bcalm_on_fq_gz:
         """
 
 
+# rule genome_fasta_to_fastq:
+#     """
+#     Convert a FASTA formatted file into FASTQ.
+#     \
+#     Input/output patterns are limited to files found in */genome/* in order to
+#     prevent circular dependencies.
+#     \
+#     """
+#     output:
+#         "{stemA}/{stemB}.fq.gz",
+#     input:
+#         "{stemA}/{stemB}.fn",
+#     conda:
+#         "conda/seqtk.yaml"
+#     shell:
+#         "seqtk seq -F '#' {input} | gzip -c > {output}"
+#
+#
+# rule run_ggcat:
+#     output:
+#         "{stem}.ggcat-k{ksize}.fn",
+#     input:
+#         "{stem}.fq.gz",
+#     params:
+#         ksize=lambda w: int(w.ksize),
+#     container:
+#         config["container"]["ggcat"]
+#     threads: 24
+#     shell:
+#         """
+#         tmpdir=$(mktemp -d)
+#         echo $tmpdir
+#         ggcat build -s 1 -j {threads} -t $tmpdir -o {output} -k {wildcards.ksize} -e {input}
+#         """
+#
+# rule construct_ggcat_group_input_list:
+#     output:
+#         "data/group/{group}/r.proc.input_list.list",
+#     input:
+#         lambda w: (
+#             [
+#                 f"data/reads/{mgen}/r1.proc.fq.gz"
+#                 for mgen in config["mgen_group"][w.group]
+#             ]
+#             + [
+#                 f"data/reads/{mgen}/r2.proc.fq.gz"
+#                 for mgen in config["mgen_group"][w.group]
+#             ]
+#         ),
+#     shell:
+#         "echo {input} > {output}"
+#
+#
+#
+# rule run_ggcat_on_group:
+#     output:
+#         "data/group/{group}/r.proc.ggcat-k{ksize}-m{softmin}.fn",
+#     input:
+#         "data/group/{group}/r.proc.input_fq.list",
+#     params:
+#         ksize=lambda w: int(w.ksize),
+#         softmin=lambda w: int(w.softmin),
+#     container:
+#         config["container"]["ggcat"]
+#     threads: 24
+#     shell:
+#         """
+#         ggcat build -s {params.softmin} -j {threads} -o {output} -k {wildcards.ksize} -e $(cat {input})
+#         """
+
+
 rule construct_mgen_group_input_table:
     output:
         "data/group/{group}/r.proc.kmtricks_input.txt",
