@@ -1,0 +1,6 @@
+name: kmtricks
+channels:
+  - conda-forge
+  - tlemane
+dependencies:
+  - kmtricks
