@@ -255,7 +255,8 @@ rule run_jellyfish_count:
     params:
         ksize=lambda w: int(w.ksize),
     threads: 4
-    conda: 'conda/jellyfish.yaml'
+    container:
+        config["container"]["jfish"]
     shell:
         """
         jellyfish count \
