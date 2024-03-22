@@ -1,62 +1,30 @@
-use rule start_shell as start_shell_bcalm with:
-    conda:
-        "conda/bcalm.yaml"
+rule start_shell_ggcat:
+    container: config["container"]["ggcat"]
+    shell:
+        "bash"
 
+rule start_conda_shell:
+    output: "start_shell.{conda}"
+    conda: "conda/{conda}.yaml"
+    shell:
+        "bash"
 
-use rule start_shell as start_shell_ggcat with:
-    container:
-        config["container"]["ggcat"]
-
-
-use rule start_shell as start_shell_kmtricks with:
-    conda:
-        "conda/kmtricks.yaml"
-
-
-# TODO: Figure out how to link the dna_jellyfish package
-# into my conda environment.
-# NOTE: While I cannot get the conda environment building to automatically
-# add the (swig) python bindings for jellyfish, I was able to figure out how
-# to add them manually myself for a new conda environment being run inside of
-# the jellyfish image:
-# docker://bsmith89/jellyfish:435ac5c9499c6e4c92936884c5e549cd73816fdc
-# To do this, you need to link three different files originally
-# installed by pip into the base python for the Docker container.
-# These files are all found in /opt/conda/lib/python3.9/site-packages/ :
-#   dna_jellyfish-0.0.1.dist-info
-#   dna_jellyfish.py
-#   _dna_jellyfish.cpython-39-x86_64-linux-gnu.so
-# All three should be linked into $CONDA_PREFIX/lib/python3.9/site-packages
-# Unfortunately, I was not able to get this to work with *.post-deploy.sh
-# because $CONDA_PREFIX was set to my outermost snakemake environment.
-# (I think this is a bug.)
-use rule start_shell as start_shell_jfish with:
-    conda:
-        "conda/jfish.yaml"
-    container:
-        config["container"]["jfish"]
-
-
-# NOTE: This is mostly intended for testing jellyfish-dependent
-# work while I still haven't figured out how to install it
-# normally to a conda environment.
-use rule start_shell as start_shell_jfish_base with:
-    container:
-        config["container"]["jfish"]
-
-
-# NOTE See start_shell_jfish for how to get python bindings to work
-# after building the conda environment.
-# FIXME: Still cannot get bindings to work, even if they work fine
-# from inside the singularity container.
-use rule install_jupyter_kernel_native as install_jupyter_kernel_jfish with:
-    params:
-        name="jfish",
-    conda:
-        "conda/jfish.yaml"
-    container:
-        config["container"]["jfish"]
-
+rule start_conda_ipython:
+    output: "start_ipython.{conda}"
+    conda: "conda/{conda}.yaml"
+    shell:
+        "ipython"
+#
+#
+# use rule start_shell as start_shell_ggcat with:
+#     container:
+#         config["container"]["ggcat"]
+#
+#
+# use rule start_shell as start_shell_kmtricks with:
+#     conda:
+#         "conda/kmtricks.yaml"
+#
 
 def genbank_genomic_ftp_url(accession, assembly):
     prefix = accession[:3]
@@ -98,154 +66,6 @@ rule alias_genbank_genome:
         alias_recipe
 
 
-rule merge_ecoli_strains:
-    output:
-        "data/both_strains.fn",
-    input:
-        "data/genbank/ecoli.mg1655.fn",
-        "data/genbank/ecoli.o121h19.fn",
-    shell:
-        "cat {input} > {output}"
-
-
-rule merge_ecoli_and_bdorei:
-    output:
-        "data/both_species.fn",
-    input:
-        "data/genbank/ecoli.mg1655.fn",
-        "data/genbank/bdorei.dsm17855.fn",
-    shell:
-        "cat {input} > {output}"
-
-
-rule merge_two_ecoli_and_bdorei:
-    output:
-        "data/three_genomes.fn",
-    input:
-        "data/genbank/ecoli.mg1655.fn",
-        "data/genbank/ecoli.o121h19.fn",
-        "data/genbank/bdorei.dsm17855.fn",
-    shell:
-        "cat {input} > {output}"
-
-
-rule run_bcalm:
-    output:
-        "{stem}.bcalm-k{ksize}.fn",
-    input:
-        "{stem}.fn",
-    params:
-        outprefix="{stem}.bcalm-k{ksize}",
-        ksize=lambda w: int(w.ksize),
-    conda:
-        "conda/bcalm.yaml"
-    threads: 24
-    shell:
-        """
-        bcalm \
-            -nb-cores {threads} \
-            -in {input} \
-            -kmer-size {params.ksize} \
-            -abundance-min 1 \
-            -out {params.outprefix}
-        mv {params.outprefix}.unitigs.fa {output}
-        """
-
-
-rule run_bcalm_on_fq_gz:
-    output:
-        "{stem}.bcalm-k{ksize}.fn",
-    input:
-        "{stem}.fq.gz",
-    params:
-        outprefix="{stem}.bcalm-k{ksize}",
-        ksize=lambda w: int(w.ksize),
-    conda:
-        "conda/bcalm.yaml"
-    threads: 24
-    shell:
-        """
-        bcalm \
-            -nb-cores {threads} \
-            -in {input} \
-            -kmer-size {params.ksize} \
-            -abundance-min 1 \
-            -out {params.outprefix}
-        mv {params.outprefix}.unitigs.fa {output}
-        """
-
-
-# rule genome_fasta_to_fastq:
-#     """
-#     Convert a FASTA formatted file into FASTQ.
-#     \
-#     Input/output patterns are limited to files found in */genome/* in order to
-#     prevent circular dependencies.
-#     \
-#     """
-#     output:
-#         "{stemA}/{stemB}.fq.gz",
-#     input:
-#         "{stemA}/{stemB}.fn",
-#     conda:
-#         "conda/seqtk.yaml"
-#     shell:
-#         "seqtk seq -F '#' {input} | gzip -c > {output}"
-#
-#
-# rule run_ggcat:
-#     output:
-#         "{stem}.ggcat-k{ksize}.fn",
-#     input:
-#         "{stem}.fq.gz",
-#     params:
-#         ksize=lambda w: int(w.ksize),
-#     container:
-#         config["container"]["ggcat"]
-#     threads: 24
-#     shell:
-#         """
-#         tmpdir=$(mktemp -d)
-#         echo $tmpdir
-#         ggcat build -s 1 -j {threads} -t $tmpdir -o {output} -k {wildcards.ksize} -e {input}
-#         """
-#
-# rule construct_ggcat_group_input_list:
-#     output:
-#         "data/group/{group}/r.proc.input_list.list",
-#     input:
-#         lambda w: (
-#             [
-#                 f"data/reads/{mgen}/r1.proc.fq.gz"
-#                 for mgen in config["mgen_group"][w.group]
-#             ]
-#             + [
-#                 f"data/reads/{mgen}/r2.proc.fq.gz"
-#                 for mgen in config["mgen_group"][w.group]
-#             ]
-#         ),
-#     shell:
-#         "echo {input} > {output}"
-#
-#
-#
-# rule run_ggcat_on_group:
-#     output:
-#         "data/group/{group}/r.proc.ggcat-k{ksize}-m{softmin}.fn",
-#     input:
-#         "data/group/{group}/r.proc.input_fq.list",
-#     params:
-#         ksize=lambda w: int(w.ksize),
-#         softmin=lambda w: int(w.softmin),
-#     container:
-#         config["container"]["ggcat"]
-#     threads: 24
-#     shell:
-#         """
-#         ggcat build -s {params.softmin} -j {threads} -o {output} -k {wildcards.ksize} -e $(cat {input})
-#         """
-
-
 rule construct_mgen_group_input_table:
     output:
         "data/group/{group}/r.proc.kmtricks_input.txt",
@@ -275,13 +95,27 @@ rule construct_three_genome_input_table:
         ecoli_o121h19="data/genbank/ecoli.o121h19.fn",
         bdorei_dsm17855="data/genbank/bdorei.dsm17855.fn",
     shell:
-        """
-cat <<EOF > {output}
-ecoli_mg1655 : data/genbank/ecoli.mg1655.fn
-ecoli_o121h19 : data/genbank/ecoli.o121h19.fn
-bdorei_dsm17855 : data/genbank/bdorei.dsm17855.fn
-EOF
-        """
+        dd("""
+        cat <<EOF > {output}
+        ecoli_mg1655 : data/genbank/ecoli.mg1655.fn
+        ecoli_o121h19 : data/genbank/ecoli.o121h19.fn
+        bdorei_dsm17855 : data/genbank/bdorei.dsm17855.fn
+        EOF
+        """)
+
+rule construct_two_genome_input_table:
+    output:
+        "data/two_genomes.kmtricks_input.txt",
+    input:
+        ecoli_mg1655="data/genbank/ecoli.mg1655.fn",
+        ecoli_o121h19="data/genbank/ecoli.o121h19.fn",
+    shell:
+        dd("""
+        cat <<EOF > {output}
+        ecoli_mg1655 : data/genbank/ecoli.mg1655.fn
+        ecoli_o121h19 : data/genbank/ecoli.o121h19.fn
+        EOF
+        """)
 
 
 rule run_kmtricks_pipeline:
@@ -363,39 +197,3 @@ rule convert_bcalm_to_gfa:
         ksize=lambda w: int(w.ksize),
     shell:
         "{input.script} {input.fn} {output} {params.ksize}"
-
-
-rule run_jellyfish_count:
-    output:
-        "{stem}.jfish-k{ksize}.jf",
-    input:
-        "{stem}.fn",
-    params:
-        ksize=lambda w: int(w.ksize),
-    threads: 4
-    container:
-        config["container"]["jfish"]
-    shell:
-        """
-        jellyfish count \
-            --size 100M \
-            --mer-len={params.ksize} \
-            --threads={threads} \
-            --canonical \
-            --lower-count=0 \
-            --output={output} \
-            {input}
-        """
-
-
-rule dump_jellyfish_kmer_counts:
-    output:
-        "{stem}.kmer-k{ksize}.counts.tsv",
-    input:
-        "{stem}.jfish-k{ksize}.jf",
-    container:
-        config["container"]["jfish"]
-    shell:
-        """
-        jellyfish dump --column --tab --output={output} {input}
-        """
