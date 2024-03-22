@@ -23,6 +23,7 @@ __pycache__
 nb/profile_default
 .panoptes.db
 .java
+.temp_files/
 
 # Data Directories
 log
