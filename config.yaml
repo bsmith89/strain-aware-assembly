@@ -2,6 +2,7 @@ container:
   default: 'docker://bsmith89/compbio2:5cbda6bd9437faaa46546c71b3a2afb961ba5376'
   toolz: 'docker://bsmith89/compbio2:5cbda6bd9437faaa46546c71b3a2afb961ba5376'
   mambaforge: 'docker://condaforge/mambaforge:4.11.0-4'
+  jfish: 'docker://bsmith89/jellyfish:435ac5c9499c6e4c92936884c5e549cd73816fdc'
 proc: 'hfilt.dedup.deadapt.qtrim'
 MAX_THREADS: 4
 USE_CUDA: 0
