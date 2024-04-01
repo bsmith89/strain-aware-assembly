@@ -1,0 +1,34 @@
+name: strainzip
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - black
+  - cython
+  - graph-tool
+  - ipython
+  - isort
+  - jupyterlab
+  - line_profiler
+  - lz4
+  - matplotlib
+  - memory_profiler
+  - netCDF4
+  - nptyping
+  - numba
+  - numpy
+  - pandas
+  - patsy
+  - pre-commit
+  - pynvim
+  - pyright
+  - pytest
+  - scikit-learn
+  - scipy
+  - seaborn
+  - tqdm
+  - xarray
+  - pip
+  - pip:
+    - -e /include/StrainZip

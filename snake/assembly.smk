@@ -187,13 +187,36 @@ rule run_ggcat_on_kmtricks_kmers:
         """
 
 
-rule convert_bcalm_to_gfa:
-    output:
-        "{stem}.bcalm-k{ksize}.gfa",
-    input:
-        script="scripts/bcalm_to_gfa.py",
-        fn="{stem}.bcalm-k{ksize}.fn",
-    params:
-        ksize=lambda w: int(w.ksize),
+rule load_ggcat_fasta_to_gt:
+    output: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.gt"
+    input: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn"
+    conda: "conda/strainzip.yaml"
     shell:
-        "{input.script} {input.fn} {output} {params.ksize}"
+        """
+        strainzip load_graph {wildcards.ksize} {input} {output}
+        """
+
+
+rule calculate_mean_unitig_depths_across_samples:
+    output: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.unitig_depth.nc"
+    input:
+        fasta="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn",
+        db="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
+    conda: "conda/strainzip.yaml"
+    threads: 12
+    shell:
+        """
+        strainzip depth --preload -p {threads} {input.db} {wildcards.ksize} {input.fasta} {output}
+        """
+
+
+# rule convert_bcalm_to_gfa:
+#     output:
+#         "{stem}.bcalm-k{ksize}.gfa",
+#     input:
+#         script="scripts/bcalm_to_gfa.py",
+#         fn="{stem}.bcalm-k{ksize}.fn",
+#     params:
+#         ksize=lambda w: int(w.ksize),
+#     shell:
+#         "{input.script} {input.fn} {output} {params.ksize}"
