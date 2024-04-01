@@ -174,25 +174,25 @@ rule run_ggcat_on_kmtricks_kmers:
     output:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn",
     input:
-        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
+        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
+    params:
+        quality_string=lambda w: "#" * int(w.ksize)
     container:
         config["container"]["ggcat"]
     threads: 24
     shell:
         """
         fifo_dir=$(mktemp -d)
-        for i in $(seq {threads});
+        for file in {input}/*.count.txt;
         do
-            fq=$fifo_dir/kmer.fifo-$i.fq
+            fq=$fifo_dir/$(basename $file).fifo.fq
             echo making fifo $fq
             mkfifo $fq
-            sqlite3 {input} "SELECT '@' || rowid || '|' || kmer || '|+|' || kmer AS rowid FROM count_ WHERE rowid % {threads} = ($i - 1);" \
-                    | tr '|' '\\n' \
-                > $fq &
+            awk '{{print $1}}' $file | sed 's:^\(.*\)$:@\\n\\1\\n+\\n{params.quality_string}:' > $fq &
             echo fifo $fq running
         done
         sleep 2
-        ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e $fifo_dir/kmer.fifo-*.fq
+        ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e $fifo_dir/*
         rm -r $fifo_dir
         """
 
