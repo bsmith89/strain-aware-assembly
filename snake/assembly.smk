@@ -118,6 +118,14 @@ rule construct_two_genome_input_table:
         """)
 
 
+# NOTE: --hard-min 0 and --share-min 1 always
+# or else some 0s will be censoring instead of actually
+# missing. (That's because counts below --hard-min are discarded
+# from individual samples and counts below --soft-min can be
+# discarded from individual samples if they're solid in fewer than
+# --share-min samples.
+# With --hard-min 0 and --share-min 1, counts for a kmer are either
+# kept entirely or discarded entirely.
 rule run_kmtricks_pipeline:
     output:
         directory("{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d"),
@@ -130,12 +138,14 @@ rule run_kmtricks_pipeline:
     conda:
         "conda/kmtricks.yaml"
     threads: 24
+    resources:
     shell:
         """
         tmpdir={output}.tmp
         kmtricks pipeline \
                 --kmer-size {params.ksize} \
-                --hard-min 0 --share-min 1 --soft-min {params.mincount} --recurrence-min {params.recurrence} \
+                --hard-min 0 --share-min 1 \
+                --soft-min {params.mincount} --recurrence-min {params.recurrence} \
                 --file {input} --run-dir $tmpdir \
                 --mode kmer:count:text \
                 --threads {threads}
