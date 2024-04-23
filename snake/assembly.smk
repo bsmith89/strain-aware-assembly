@@ -135,22 +135,39 @@ rule run_kmtricks_pipeline:
         ksize=lambda w: int(w.ksize),
         mincount=lambda w: int(w.mincount),
         recurrence=lambda w: int(w.recurrence),
+        num_partitions=32,
     conda:
         "conda/kmtricks.yaml"
     threads: 24
     resources:
     shell:
         """
-        tmpdir={output}.tmp
-        kmtricks pipeline \
+        workdir={output}.tmp
+        kmtricks pipeline --until superk --run-dir $workdir \
+                --threads {threads} --verbose info \
                 --kmer-size {params.ksize} \
-                --hard-min 0 --share-min 1 \
-                --soft-min {params.mincount} --recurrence-min {params.recurrence} \
-                --file {input} --run-dir $tmpdir \
+                --nb-partitions {params.num_partitions} \
+                --file {input}
+
+
+        cut -d' ' -f1 {input} | xargs -n1 -I % \
+            kmtricks count --run-dir $workdir \
+                --threads {threads} --verbose info \
+                --mode kmer \
+                --hard-min 0 \
+                --id %
+
+        seq 32 | xargs -n1 -I % -P {threads} \
+            kmtricks merge --run-dir $workdir \
+                --threads 1 --verbose info \
                 --mode kmer:count:text \
-                --threads {threads}
-        mv $tmpdir/matrices {output}
-        rm -r $tmpdir
+                --share-min 1 \
+                --soft-min {params.mincount} \
+                --recurrence-min {params.recurrence} \
+                --partition-id %
+
+        mv $workdir/matrices {output}
+        mv $workdir {output}/workdir
         """
 
 
