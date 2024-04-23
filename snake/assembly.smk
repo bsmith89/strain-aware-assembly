@@ -197,16 +197,6 @@ rule run_ggcat_on_kmtricks_kmers:
         """
 
 
-rule load_ggcat_fasta_to_gt:
-    output: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.gt"
-    input: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn"
-    conda: "conda/strainzip.yaml"
-    shell:
-        """
-        strainzip load_graph {wildcards.ksize} {input} {output}
-        """
-
-
 rule calculate_mean_unitig_depths_across_samples:
     output: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.unitig_depth.nc"
     input:
@@ -216,8 +206,46 @@ rule calculate_mean_unitig_depths_across_samples:
     threads: 12
     shell:
         """
-        strainzip depth --preload -p {threads} {input.db} {wildcards.ksize} {input.fasta} {output}
+        strainzip depth --preload -p {threads} {input.fasta} {input.db} {wildcards.ksize} {output}
         """
+
+
+rule load_ggcat_fasta_to_sz:
+    output: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.sz"
+    input:
+        fasta="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn",
+        depth="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.unitig_depth.nc",
+    conda: "conda/strainzip.yaml"
+    shell:
+        """
+        strainzip load --verbose {wildcards.ksize} {input.fasta} {input.depth} {output}
+        """
+
+rule depth_smooth:
+    output: "{stem}.smoothed.sz"
+    input:
+        "{stem}.sz",
+    conda: "conda/strainzip.yaml"
+    threads: 36,
+    shell:
+        """
+        strainzip smooth --verbose -p {threads} {input} {output}
+        """
+
+
+rule trim_tips:
+    output: "{stem}.notips.sz"
+    input: "{stem}.sz"
+    conda: "conda/strainzip.yaml"
+    threads: 36
+    shell: "strainzip trim -p {threads} --verbose {input} {output}"
+
+rule deconvolve_junctions:
+    output: "{stem}.deconvolve.sz"
+    input: "{stem}.sz"
+    conda: "conda/strainzip.yaml"
+    threads: 36
+    shell: "strainzip assemble -p {threads} --verbose {input} 10 {output}"
 
 
 # rule convert_bcalm_to_gfa:
