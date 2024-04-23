@@ -193,10 +193,10 @@ rule run_ggcat_on_kmtricks_kmers:
     input:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
     params:
-        quality_string=lambda w: "#" * int(w.ksize)
+        quality_string=lambda w: "#"  # NOTE: Not correctly formatted?: * int(w.ksize)
     container:
         config["container"]["ggcat"]
-    threads: 24
+    threads: 36
     shell:
         """
         fifo_dir=$(mktemp -d)
