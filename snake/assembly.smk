@@ -157,7 +157,7 @@ rule run_kmtricks_pipeline:
                 --hard-min 0 \
                 --id %
 
-        seq 32 | xargs -n1 -I % -P {threads} \
+        seq 0 31 | xargs -n1 -I % -P {threads} \
             kmtricks merge --run-dir $workdir \
                 --threads 1 --verbose info \
                 --mode kmer:count:text \
