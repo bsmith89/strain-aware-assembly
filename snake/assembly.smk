@@ -258,11 +258,11 @@ rule trim_tips:
     shell: "strainzip trim -p {threads} --verbose {input} {output}"
 
 rule deconvolve_junctions:
-    output: "{stem}.deconvolve.sz"
+    output: "{stem}.deconvolve-{thresh}.sz"
     input: "{stem}.sz"
     conda: "conda/strainzip.yaml"
     threads: 36
-    shell: "strainzip assemble -p {threads} --verbose {input} 10 {output}"
+    shell: "strainzip assemble -p {threads} --verbose {input} {wildcards.thresh} {output}"
 
 
 # rule convert_bcalm_to_gfa:
