@@ -257,6 +257,13 @@ rule trim_tips:
     threads: 36
     shell: "strainzip trim -p {threads} --verbose {input} {output}"
 
+rule trim_tips_unpressed:
+    output: "{stem}.notips-unpressed.sz"
+    input: "{stem}.sz"
+    conda: "conda/strainzip.yaml"
+    threads: 36
+    shell: "strainzip trim -p {threads} --verbose --no-press {input} {output}"
+
 rule deconvolve_junctions:
     output: "{stem}.deconvolve-{thresh}.sz"
     input: "{stem}.sz"
