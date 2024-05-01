@@ -1,3 +1,9 @@
+config["genome"] = pd.read_table("meta/genome.tsv", dtype=str, index_col=["genome_id"])
+config["genome_group"]["xjin"] = pd.read_table(
+    "meta/genome.tsv", dtype=str, index_col=["genome_id"]
+).index
+
+
 rule start_shell_ggcat:
     container: config["container"]["ggcat"]
     shell:
