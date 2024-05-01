@@ -317,11 +317,19 @@ rule trim_tips_unpressed:
 
 
 rule deconvolve_junctions:
-    output: "{stem}.deconvolve-{thresh}.sz"
-    input: "{stem}.sz"
-    conda: "conda/strainzip.yaml"
+    output:
+        "{stem}.deconvolve-{model}-{thresh}.sz",
+    input:
+        "{stem}.sz",
+    params:
+        model=lambda w: {"log": "LogPlusAlphaLogNormal", "lin": "SoftPlusNormal"}[
+            w.model
+        ],
+    conda:
+        "conda/strainzip.yaml"
     threads: 36
-    shell: "strainzip assemble -p {threads} --verbose {input} {wildcards.thresh} {output}"
+    shell:
+        "strainzip assemble -p {threads} --verbose {input} --model {params.model} {wildcards.thresh} {output}"
 
 
 rule extract_assembly_results:
