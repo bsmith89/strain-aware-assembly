@@ -5,21 +5,30 @@ config["genome_group"]["xjin"] = pd.read_table(
 
 
 rule start_shell_ggcat:
-    container: config["container"]["ggcat"]
+    container:
+        config["container"]["ggcat"]
     shell:
         "bash"
+
 
 rule start_conda_shell:
-    output: "start_shell.{conda}"
-    conda: "conda/{conda}.yaml"
+    output:
+        "start_shell.{conda}",
+    conda:
+        "conda/{conda}.yaml"
     shell:
         "bash"
 
+
 rule start_conda_ipython:
-    output: "start_ipython.{conda}"
-    conda: "conda/{conda}.yaml"
+    output:
+        "start_ipython.{conda}",
+    conda:
+        "conda/{conda}.yaml"
     shell:
         "ipython"
+
+
 #
 #
 # use rule start_shell as start_shell_ggcat with:
@@ -31,6 +40,7 @@ rule start_conda_ipython:
 #     conda:
 #         "conda/kmtricks.yaml"
 #
+
 
 def genbank_genomic_ftp_url(accession, assembly):
     prefix = accession[:3]
@@ -101,13 +111,16 @@ rule construct_three_genome_input_table:
         ecoli_o121h19="data/genbank/ecoli.o121h19.fn",
         bdorei_dsm17855="data/genbank/bdorei.dsm17855.fn",
     shell:
-        dd("""
+        dd(
+            """
         cat <<EOF > {output}
         ecoli_mg1655 : data/genbank/ecoli.mg1655.fn
         ecoli_o121h19 : data/genbank/ecoli.o121h19.fn
         bdorei_dsm17855 : data/genbank/bdorei.dsm17855.fn
         EOF
-        """)
+        """
+        )
+
 
 rule construct_two_genome_input_table:
     output:
@@ -116,12 +129,14 @@ rule construct_two_genome_input_table:
         ecoli_mg1655="data/genbank/ecoli.mg1655.fn",
         ecoli_o121h19="data/genbank/ecoli.o121h19.fn",
     shell:
-        dd("""
+        dd(
+            """
         cat <<EOF > {output}
         ecoli_mg1655 : data/genbank/ecoli.mg1655.fn
         ecoli_o121h19 : data/genbank/ecoli.o121h19.fn
         EOF
-        """)
+        """
+        )
 
 
 # NOTE: --hard-min 0 and --share-min 1 always
@@ -145,7 +160,6 @@ rule run_kmtricks_pipeline:
     conda:
         "conda/kmtricks.yaml"
     threads: 24
-    resources:
     shell:
         """
         workdir={output}.tmp
@@ -199,7 +213,7 @@ rule run_ggcat_on_kmtricks_kmers:
     input:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
     params:
-        quality_string=lambda w: "#"  # NOTE: Not correctly formatted?: * int(w.ksize)
+        quality_string=lambda w: "#",  # NOTE: Not correctly formatted?: * int(w.ksize)
     container:
         config["container"]["ggcat"]
     threads: 36
@@ -221,11 +235,13 @@ rule run_ggcat_on_kmtricks_kmers:
 
 
 rule calculate_mean_unitig_depths_across_samples:
-    output: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.unitig_depth.nc"
+    output:
+        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.unitig_depth.nc",
     input:
         fasta="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn",
         db="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
-    conda: "conda/strainzip.yaml"
+    conda:
+        "conda/strainzip.yaml"
     threads: 12
     shell:
         """
@@ -234,22 +250,27 @@ rule calculate_mean_unitig_depths_across_samples:
 
 
 rule load_ggcat_fasta_to_sz:
-    output: "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.sz"
+    output:
+        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.sz",
     input:
         fasta="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn",
         depth="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.unitig_depth.nc",
-    conda: "conda/strainzip.yaml"
+    conda:
+        "conda/strainzip.yaml"
     shell:
         """
         strainzip load --verbose {wildcards.ksize} {input.fasta} {input.depth} {output}
         """
 
+
 rule depth_smooth:
-    output: "{stem}.smoothed.sz"
+    output:
+        "{stem}.smoothed.sz",
     input:
         "{stem}.sz",
-    conda: "conda/strainzip.yaml"
-    threads: 36,
+    conda:
+        "conda/strainzip.yaml"
+    threads: 36
     shell:
         """
         strainzip smooth --verbose -p {threads} {input} {output}
@@ -257,18 +278,28 @@ rule depth_smooth:
 
 
 rule trim_tips:
-    output: "{stem}.notips.sz"
-    input: "{stem}.sz"
-    conda: "conda/strainzip.yaml"
+    output:
+        "{stem}.notips.sz",
+    input:
+        "{stem}.sz",
+    conda:
+        "conda/strainzip.yaml"
     threads: 36
-    shell: "strainzip trim -p {threads} --verbose {input} {output}"
+    shell:
+        "strainzip trim -p {threads} --verbose {input} {output}"
+
 
 rule trim_tips_unpressed:
-    output: "{stem}.notips-unpressed.sz"
-    input: "{stem}.sz"
-    conda: "conda/strainzip.yaml"
+    output:
+        "{stem}.notips-unpressed.sz",
+    input:
+        "{stem}.sz",
+    conda:
+        "conda/strainzip.yaml"
     threads: 36
-    shell: "strainzip trim -p {threads} --verbose --no-press {input} {output}"
+    shell:
+        "strainzip trim -p {threads} --verbose --no-press {input} {output}"
+
 
 rule deconvolve_junctions:
     output: "{stem}.deconvolve-{thresh}.sz"
