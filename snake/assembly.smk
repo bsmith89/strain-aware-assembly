@@ -82,6 +82,17 @@ rule alias_genbank_genome:
         alias_recipe
 
 
+rule link_project_reference_genome_no_species:
+    output:
+        "data/genome/{genome}.fn",
+    input:
+        lambda w: config["genome"].loc[w.genome].genome_path,
+    wildcard_constraints:
+        genome=noperiod_wc,
+    shell:
+        alias_recipe
+
+
 rule construct_mgen_group_input_table:
     output:
         "data/group/{group}/r.proc.kmtricks_input.txt",
@@ -152,6 +163,10 @@ rule run_kmtricks_pipeline:
         directory("{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d"),
     input:
         "{stem}.kmtricks_input.txt",
+    wildcard_constraints:
+        ksize=integer_wc,
+        mincount=integer_wc,
+        recurrence=integer_wc,
     params:
         ksize=lambda w: int(w.ksize),
         mincount=lambda w: int(w.mincount),
@@ -307,6 +322,59 @@ rule deconvolve_junctions:
     conda: "conda/strainzip.yaml"
     threads: 36
     shell: "strainzip assemble -p {threads} --verbose {input} {wildcards.thresh} {output}"
+
+
+rule extract_assembly_results:
+    output:
+        fasta="{stemA}.ggcat.{stemB}.fn",
+        depth="{stemA}.ggcat.{stemB}.depth.tsv",
+        segments="{stemA}.ggcat.{stemB}.segments.tsv",
+    input:
+        graph="{stemA}.ggcat.{stemB}.sz",
+        fasta="{stemA}.ggcat.fn",
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        "strainzip extract --verbose {input.graph} {input.fasta} {output.segments} {output.depth} {output.fasta}"
+
+
+rule quality_asses_assembly_against_one_ref:
+    output:
+        directory("{stem}.gquast-{genome}.d"),
+    input:
+        tigs="{stem}.fn",
+        ref="data/genome/{genome}.fn",
+    threads: 24
+    params:
+        min_tig_length=1000,
+    conda:
+        "conda/quast.yaml"
+    shell:
+        """
+        metaquast.py --threads={threads} --min-contig {params.min_tig_length} -R {input.ref} --output-dir {output} {input.tigs}
+        """
+
+
+rule quality_asses_assembly_against_all_refs:
+    output:
+        directory("{stem}.quast-{group}.d"),
+    input:
+        tigs="{stem}.fn",
+        refs=lambda w: [
+            f"data/genome/{genome}.fn" for genome in config["genome_group"][w.group]
+        ],
+    threads: 24
+    params:
+        min_tig_length=1000,
+        refs=lambda w: ",".join(
+            [f"data/genome/{genome}.fn" for genome in config["genome_group"][w.group]]
+        ),
+    conda:
+        "conda/quast.yaml"
+    shell:
+        """
+        metaquast.py --threads={threads} --min-contig {params.min_tig_length} -r {params.refs} --output-dir {output} {input.tigs}
+        """
 
 
 # rule convert_bcalm_to_gfa:
