@@ -346,6 +346,40 @@ rule extract_assembly_results:
         "strainzip extract --verbose {input.graph} {input.fasta} {output.segments} {output.depth} {output.fasta}"
 
 
+rule megahit_assemble:
+    output:
+        dir=directory("data/group/{group}/r.{stem}.megahit.d"),
+        fasta="data/group/{group}/r.{stem}.megahit.fn",
+    input:
+        r1=lambda w: [
+            f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        r2=lambda w: [
+            f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+    params:
+        r1=lambda w: ",".join(
+            [
+                f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
+                for mgen in config["mgen_group"][w.group]
+            ]
+        ),
+        r2=lambda w: ",".join(
+            [
+                f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
+                for mgen in config["mgen_group"][w.group]
+            ]
+        ),
+    threads: 36
+    shell:
+        """
+        megahit -t {threads} -o {output.dir} -1 {params.r1} -2 {params.r2}
+        ln {output.dir}/final.contigs.fa {output.fasta}
+        """
+
+
 rule quality_asses_assembly_against_one_ref:
     output:
         directory("{stem}.gquast-{genome}.d"),
