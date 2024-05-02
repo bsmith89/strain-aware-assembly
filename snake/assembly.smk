@@ -257,7 +257,7 @@ rule calculate_mean_unitig_depths_across_samples:
         db="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
     conda:
         "conda/strainzip.yaml"
-    threads: 12
+    threads: 24
     shell:
         """
         strainzip depth --preload -p {threads} {input.fasta} {input.db} {wildcards.ksize} {output}
