@@ -329,7 +329,7 @@ rule deconvolve_junctions:
         "conda/strainzip.yaml"
     threads: 36
     shell:
-        "strainzip assemble --debug -p {threads} --{input} --model {params.model} {wildcards.thresh} {output}"
+        "strainzip assemble --debug -p {threads} --model {params.model} {input} {wildcards.thresh} {output}"
 
 
 rule extract_assembly_results:
