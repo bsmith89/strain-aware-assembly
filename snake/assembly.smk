@@ -264,7 +264,7 @@ rule calculate_mean_unitig_depths_across_samples:
         """
 
 
-rule load_ggcat_fasta_to_sz:
+rule load_ggcat_with_depths_to_sz:
     output:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.sz",
     input:
@@ -274,7 +274,7 @@ rule load_ggcat_fasta_to_sz:
         "conda/strainzip.yaml"
     shell:
         """
-        strainzip load --verbose {wildcards.ksize} {input.fasta} {input.depth} {output}
+        strainzip load --debug {wildcards.ksize} {input.fasta} {input.depth} {output}
         """
 
 
