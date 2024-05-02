@@ -349,8 +349,10 @@ rule extract_assembly_results:
 
 rule megahit_assemble:
     output:
-        dir=directory("data/group/{group}/r.{stem}.megahit.d"),
-        fasta="data/group/{group}/r.{stem}.megahit.fn",
+        dir=directory("data/group/{group}/r.{stem}.megahit-k{ksize}.d"),
+        fasta="data/group/{group}/r.{stem}.megahit-k{ksize}.fn",
+    wildcard_constraints:
+        ksize=integer_wc,
     input:
         r1=lambda w: [
             f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
@@ -376,7 +378,7 @@ rule megahit_assemble:
     threads: 36
     shell:
         """
-        megahit -t {threads} -o {output.dir} -1 {params.r1} -2 {params.r2}
+        megahit -t {threads} --k-list {wildcards.ksize} -o {output.dir} -1 {params.r1} -2 {params.r2}
         ln {output.dir}/final.contigs.fa {output.fasta}
         """
 
