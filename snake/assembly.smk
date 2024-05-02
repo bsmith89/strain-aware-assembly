@@ -301,7 +301,7 @@ rule trim_tips:
         "conda/strainzip.yaml"
     threads: 36
     shell:
-        "strainzip trim -p {threads} --verbose {input} {output}"
+        "strainzip trim --debug -p {threads} {input} {output}"
 
 
 rule trim_tips_unpressed:
@@ -313,7 +313,7 @@ rule trim_tips_unpressed:
         "conda/strainzip.yaml"
     threads: 36
     shell:
-        "strainzip trim -p {threads} --verbose --no-press {input} {output}"
+        "strainzip trim --debug -p {threads} --no-press {input} {output}"
 
 
 rule deconvolve_junctions:
@@ -329,7 +329,7 @@ rule deconvolve_junctions:
         "conda/strainzip.yaml"
     threads: 36
     shell:
-        "strainzip assemble -p {threads} --verbose {input} --model {params.model} {wildcards.thresh} {output}"
+        "strainzip assemble --debug -p {threads} --{input} --model {params.model} {wildcards.thresh} {output}"
 
 
 rule extract_assembly_results:
@@ -343,7 +343,7 @@ rule extract_assembly_results:
     conda:
         "conda/strainzip.yaml"
     shell:
-        "strainzip extract --verbose {input.graph} {input.fasta} {output.segments} {output.depth} {output.fasta}"
+        "strainzip extract --debug {input.graph} {input.fasta} {output.segments} {output.depth} {output.fasta}"
 
 
 rule megahit_assemble:
