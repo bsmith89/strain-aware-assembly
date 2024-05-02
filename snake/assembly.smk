@@ -335,15 +335,16 @@ rule deconvolve_junctions:
 rule extract_assembly_results:
     output:
         fasta="{stemA}.ggcat.{stemB}.fn",
-        depth="{stemA}.ggcat.{stemB}.depth.tsv",
+        depth="{stemA}.ggcat.{stemB}.sequence_depth.nc",
         segments="{stemA}.ggcat.{stemB}.segments.tsv",
     input:
         graph="{stemA}.ggcat.{stemB}.sz",
         fasta="{stemA}.ggcat.fn",
+        depth="{stemA}.ggcat.unitig_depth.nc",
     conda:
         "conda/strainzip.yaml"
     shell:
-        "strainzip extract --debug {input.graph} {input.fasta} {output.segments} {output.depth} {output.fasta}"
+        "strainzip extract --debug {input.graph} {input.fasta} {input.depth} {output.segments} {output.depth} {output.fasta}"
 
 
 rule megahit_assemble:
