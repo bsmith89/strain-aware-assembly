@@ -174,17 +174,34 @@ rule run_kmtricks_pipeline:
         num_partitions=32,
     conda:
         "conda/kmtricks.yaml"
-    threads: 24
+    threads: 36
     shell:
         """
         workdir={output}.tmp
-        kmtricks pipeline --until superk --run-dir $workdir \
+
+        # Repartition
+        echo "Start Repartition" >&2
+        kmtricks repart --run-dir $workdir \
                 --threads {threads} --verbose info \
                 --kmer-size {params.ksize} \
                 --nb-partitions {params.num_partitions} \
                 --file {input}
 
+        # SuperK
+        echo "Start SuperK" >&2
+        for partition in $(seq 0 31)
+        do
+            for sample_id in $(cut -d' ' -f1 {input})
+            do
+                echo "--restrict-to-list $partition --id $sample_id"
+            done
+        done \
+            | xargs -n 4 -P{threads} \
+                kmtricks superk --run-dir $workdir \
+                    --threads {threads} --verbose info
 
+        # Count
+        echo "Start Count" >&2
         cut -d' ' -f1 {input} | xargs -n1 -I % \
             kmtricks count --run-dir $workdir \
                 --threads {threads} --verbose info \
@@ -192,6 +209,8 @@ rule run_kmtricks_pipeline:
                 --hard-min 0 \
                 --id %
 
+        # Merge
+        echo "Start Merge" >&2
         seq 0 31 | xargs -n1 -I % -P {threads} \
             kmtricks merge --run-dir $workdir \
                 --threads 1 --verbose info \
@@ -201,6 +220,7 @@ rule run_kmtricks_pipeline:
                 --recurrence-min {params.recurrence} \
                 --partition-id %
 
+        echo "Start Rename Results" >&2
         mv $workdir/matrices {output}
         mv $workdir {output}/workdir
         """
@@ -215,7 +235,7 @@ rule load_kmtricks_output_to_sqlite:
         sample_list="{stem}.kmtricks_input.txt",
     shell:
         """
-        tmpdb={output}.tmp
+        tmpdb=$(mktemp) && echo $tmpdb
         {input.script} {input.sample_list} {wildcards.ksize} | sqlite3 $tmpdb
         sort -m {input.counts}/matrix_*.count.txt | tqdm --unit-scale 1 | sqlite3 -separator ' ' $tmpdb '.import /dev/stdin count_'
         mv $tmpdb {output}
@@ -224,52 +244,117 @@ rule load_kmtricks_output_to_sqlite:
 
 rule run_ggcat_on_kmtricks_kmers:
     output:
-        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn",
+        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-denovo.fn",
     input:
-        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
-    params:
-        quality_string=lambda w: "#",  # NOTE: Not correctly formatted?: * int(w.ksize)
+        kmers="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
     container:
         config["container"]["ggcat"]
     threads: 36
     shell:
         """
-        fifo_dir=$(mktemp -d)
-        for file in {input}/*.count.txt;
+        input_dir=$(mktemp -d)
+        echo $input_dir
+
+        for file in {input.kmers}/*.count.txt;
         do
-            fq=$fifo_dir/$(basename $file).fifo.fq
-            echo making fifo $fq
-            mkfifo $fq
-            awk '{{print $1}}' $file | sed 's:^\(.*\)$:@\\n\\1\\n+\\n{params.quality_string}:' > $fq &
-            echo fifo $fq running
+            fasta=$input_dir/$(basename $file).fifo.fa
+            echo making fifo $fasta
+            mkfifo $fasta
+            awk -v OFS="\\n" '{{print ">"NR,$1}}' $file > $fasta &
         done
         sleep 2
-        ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e $fifo_dir/*
-        rm -r $fifo_dir
+        ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e $input_dir/*
+        rm -r $input_dir
+        """
+
+
+rule run_ggcat_on_kmtricks_kmers_and_include_xjin_refs:
+    output:
+        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-withref.fn",
+    input:
+        kmers="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
+        refs=lambda w: [
+            f"data/genome/{genome}.fn" for genome in config["genome_group"]["xjin"]
+        ],
+    container:
+        config["container"]["ggcat"]
+    threads: 36
+    shell:
+        """
+        input_dir=$(mktemp -d)
+        echo $input_dir
+
+        for file in {input.refs}
+        do
+            ln -s $(realpath $file) $input_dir/$(basename $file).fa
+        done
+
+        for file in {input.kmers}/*.count.txt;
+        do
+            fasta=$input_dir/$(basename $file).fifo.fa
+            echo making fifo $fasta
+            mkfifo $fasta
+            awk -v OFS="\\n" '{{print ">"NR,$1}}' $file > $fasta &
+        done
+        sleep 2
+        ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e $input_dir/*
+        rm -r $input_dir
+        """
+
+
+rule run_ggcat_on_xjin_refs:
+    output:
+        "data/xjin_ref.ggcat-k{ksize}-refonly.fn",
+    input:
+        refs=lambda w: [
+            f"data/genome/{genome}.fn" for genome in config["genome_group"]["xjin"]
+        ],
+    container:
+        config["container"]["ggcat"]
+    threads: 36
+    shell:
+        """
+        input_dir=$(mktemp -d)
+        echo $input_dir
+
+        for file in {input.refs}
+        do
+            ln -s $(realpath $file) $input_dir/$(basename $file).fa
+        done
+
+        ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e $input_dir/*
+        rm -r $input_dir
         """
 
 
 rule calculate_mean_unitig_depths_across_samples:
     output:
-        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.unitig_depth.nc",
+        "data/group/{group}/{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-{unitig_source}.unitig_depth.nc",
+    wildcard_constraints:
+        unitig_source=noperiod_wc,
     input:
-        fasta="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn",
-        db="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
+        fasta="data/group/{group}/{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-{unitig_source}.fn",
+        db="data/group/{group}/{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
     conda:
         "conda/strainzip.yaml"
-    threads: 24
+    params:
+        sample_list=lambda w: ",".join(config["mgen_group"][w.group]),
+    threads: 36
     shell:
         """
-        strainzip depth --preload -p {threads} {input.fasta} {input.db} {wildcards.ksize} {output}
+        tmpdb=$(mktemp) && echo $tmpdb
+        strainzip depth --verbose --preload --tmpdb $tmpdb -p {threads} {input.fasta} {input.db} {wildcards.ksize} {params.sample_list} {output}
         """
 
 
 rule load_ggcat_with_depths_to_sz:
     output:
-        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.sz",
+        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-{unitig_source}.sz",
+    wildcard_constraints:
+        unitig_source=single_param_wc,
     input:
-        fasta="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.fn",
-        depth="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat.unitig_depth.nc",
+        fasta="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-{unitig_source}.fn",
+        depth="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-{unitig_source}.unitig_depth.nc",
     conda:
         "conda/strainzip.yaml"
     shell:
@@ -278,7 +363,7 @@ rule load_ggcat_with_depths_to_sz:
         """
 
 
-rule depth_smooth:
+rule smooth_depths:
     output:
         "{stem}.smoothed.sz",
     input:
@@ -299,7 +384,6 @@ rule trim_tips:
         "{stem}.sz",
     conda:
         "conda/strainzip.yaml"
-    threads: 36
     shell:
         "strainzip trim --debug -p {threads} {input} {output}"
 
@@ -311,36 +395,66 @@ rule trim_tips_unpressed:
         "{stem}.sz",
     conda:
         "conda/strainzip.yaml"
-    threads: 36
     shell:
         "strainzip trim --debug -p {threads} --no-press {input} {output}"
 
 
 rule deconvolve_junctions:
     output:
-        "{stem}.deconvolve-{model}-{thresh}.sz",
+        "{stem}.deconvolve-{model}-{thresh}-{rounds}.sz",
+    wildcard_constraints:
+        model="log|lin",
+        thresh=single_param_wc,
+        rounds=single_param_wc,
     input:
         "{stem}.sz",
     params:
         model=lambda w: {"log": "LogPlusAlphaLogNormal", "lin": "SoftPlusNormal"}[
             w.model
         ],
+        min_depth=0.0,
+        score_thresh=lambda w: float(w.thresh),
+        error_thresh=0.1,
+        max_rounds=lambda w: int(w.rounds),
+        excess_thresh=1,
+        completeness_thresh=0.8,
     conda:
         "conda/strainzip.yaml"
     threads: 36
     shell:
-        "strainzip assemble --debug -p {threads} --model {params.model} {input} {wildcards.thresh} {output}"
+        """
+        # FIXME: Figure out why setting environmental variables here is necessary.
+        export XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1 --xla_force_host_platform_device_count=8"
+        export OPENBLAS_NUM_THREADS=1
+        export MKL_NUM_THREADS=1
+        export OMP_NUM_THREAD=1
+        export NUM_INTER_THREADS=1
+        export NUM_INTRA_THREADS=1
+
+        strainzip assemble --debug -p {threads} \
+                --skip-drop-low-depth \
+                --min-depth {params.min_depth} \
+                --max-rounds {params.max_rounds} --model {params.model} \
+                --score-thresh {params.score_thresh} \
+                --error-thresh {params.error_thresh} \
+                --excess-thresh {params.excess_thresh} \
+                --completeness-thresh {params.completeness_thresh} \
+                --keep-filtered \
+                {input} {output}
+        """
 
 
 rule extract_assembly_results:
     output:
-        fasta="{stemA}.ggcat.{stemB}.fn",
-        depth="{stemA}.ggcat.{stemB}.sequence_depth.nc",
-        segments="{stemA}.ggcat.{stemB}.segments.tsv",
+        fasta="{stemA}.ggcat-{unitig_source}.{stemB}.fn",
+        depth="{stemA}.ggcat-{unitig_source}.{stemB}.sequence_depth.nc",
+        segments="{stemA}.ggcat-{unitig_source}.{stemB}.segments.tsv",
+    wildcard_constraints:
+        unitig_source=noperiod_wc,
     input:
-        graph="{stemA}.ggcat.{stemB}.sz",
-        fasta="{stemA}.ggcat.fn",
-        depth="{stemA}.ggcat.unitig_depth.nc",
+        graph="{stemA}.ggcat-{unitig_source}.{stemB}.sz",
+        fasta="{stemA}.ggcat-{unitig_source}.fn",
+        depth="{stemA}.ggcat-{unitig_source}.unitig_depth.nc",
     conda:
         "conda/strainzip.yaml"
     shell:
@@ -402,15 +516,16 @@ rule quality_asses_assembly_against_one_ref:
 
 rule quality_asses_assembly_against_all_refs:
     output:
-        directory("{stem}.quast-{group}.d"),
+        dir=directory("{stem}.quast-{group}.d"),
+        contig_to_genome="{stem}.quast-{group}.contig_to_genome.txt",
     input:
         tigs="{stem}.fn",
         refs=lambda w: [
             f"data/genome/{genome}.fn" for genome in config["genome_group"][w.group]
         ],
-    threads: 24
+    threads: 12
     params:
-        min_tig_length=1000,
+        min_tig_length=500,
         refs=lambda w: ",".join(
             [f"data/genome/{genome}.fn" for genome in config["genome_group"][w.group]]
         ),
@@ -418,7 +533,8 @@ rule quality_asses_assembly_against_all_refs:
         "conda/quast.yaml"
     shell:
         """
-        metaquast.py --threads={threads} --min-contig {params.min_tig_length} -r {params.refs} --output-dir {output} {input.tigs}
+        metaquast.py --threads={threads} --min-contig {params.min_tig_length} -r {params.refs} --output-dir {output.dir} {input.tigs}
+        cp {output.dir}/combined_reference/contigs_reports/alignments_*.tsv {output.contig_to_genome}
         """
 
 
