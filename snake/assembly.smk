@@ -359,8 +359,36 @@ rule load_ggcat_with_depths_to_sz:
         "conda/strainzip.yaml"
     shell:
         """
-        strainzip load --debug {wildcards.ksize} {input.fasta} {input.depth} {output}
+        strainzip load --verbose {wildcards.ksize} {input.fasta} {input.depth} {output}
         """
+
+
+rule trim_tips:
+    output:
+        "{stem}.notips-{length}.sz",
+    wildcard_constraints:
+        length=single_param_wc,
+    input:
+        "{stem}.sz",
+    params:
+        length=lambda w: float(w.length),
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        "strainzip trim --verbose -p {threads} --num-kmer-lengths {params.length} {input} {output}"
+
+
+rule trim_tips_unpressed:
+    output:
+        "{stem}.notips-{length}-unpressed.sz",
+    input:
+        "{stem}.sz",
+    params:
+        length=lambda w: float(w.length),
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        "strainzip trim --verbose -p {threads} --no-press --num-kmer-lengths {params.length} {input} {output}"
 
 
 rule smooth_depths:
@@ -377,28 +405,6 @@ rule smooth_depths:
         """
 
 
-rule trim_tips:
-    output:
-        "{stem}.notips.sz",
-    input:
-        "{stem}.sz",
-    conda:
-        "conda/strainzip.yaml"
-    shell:
-        "strainzip trim --debug -p {threads} {input} {output}"
-
-
-rule trim_tips_unpressed:
-    output:
-        "{stem}.notips-unpressed.sz",
-    input:
-        "{stem}.sz",
-    conda:
-        "conda/strainzip.yaml"
-    shell:
-        "strainzip trim --debug -p {threads} --no-press {input} {output}"
-
-
 rule deconvolve_junctions:
     output:
         "{stem}.deconvolve-{model}-{thresh}-{rounds}.sz",
@@ -412,12 +418,13 @@ rule deconvolve_junctions:
         model=lambda w: {"log": "LogPlusAlphaLogNormal", "lin": "SoftPlusNormal"}[
             w.model
         ],
-        min_depth=0.0,
+        min_depth=1.0,
         score_thresh=lambda w: float(w.thresh),
-        error_thresh=0.1,
+        relative_error_thresh=0.1,
+        absolute_error_thresh=1.0,
         max_rounds=lambda w: int(w.rounds),
-        excess_thresh=1,
-        completeness_thresh=0.8,
+        excess_thresh=0,
+        completeness_thresh=1,
     conda:
         "conda/strainzip.yaml"
     threads: 36
@@ -431,15 +438,14 @@ rule deconvolve_junctions:
         export NUM_INTER_THREADS=1
         export NUM_INTRA_THREADS=1
 
-        strainzip assemble --debug -p {threads} \
-                --skip-drop-low-depth \
+        strainzip assemble --verbose -p {threads} \
                 --min-depth {params.min_depth} \
                 --max-rounds {params.max_rounds} --model {params.model} \
                 --score-thresh {params.score_thresh} \
-                --error-thresh {params.error_thresh} \
+                --relative-error-thresh {params.relative_error_thresh} \
+                --absolute-error-thresh {params.absolute_error_thresh} \
                 --excess-thresh {params.excess_thresh} \
                 --completeness-thresh {params.completeness_thresh} \
-                --keep-filtered \
                 {input} {output}
         """
 
@@ -458,7 +464,7 @@ rule extract_assembly_results:
     conda:
         "conda/strainzip.yaml"
     shell:
-        "strainzip extract --debug {input.graph} {input.fasta} {input.depth} {output.segments} {output.depth} {output.fasta}"
+        "strainzip extract --verbose {input.graph} {input.fasta} {input.depth} {output.segments} {output.depth} {output.fasta}"
 
 
 rule megahit_assemble:
