@@ -407,7 +407,8 @@ rule smooth_depths:
 
 rule deconvolve_junctions:
     output:
-        "{stem}.deconvolve-{model}-{thresh}-{rounds}.sz",
+        final="{stem}.deconvolve-{model}-{thresh}-{rounds}.sz",
+        checkpoint_dir=directory("{stem}.deconvolve-{model}-{thresh}-{rounds}.checkpoints.d"),
     wildcard_constraints:
         model="log|lin",
         thresh=single_param_wc,
@@ -438,6 +439,8 @@ rule deconvolve_junctions:
         export NUM_INTER_THREADS=1
         export NUM_INTRA_THREADS=1
 
+        mkdir -p {output.checkpoint_dir}
+
         strainzip assemble --verbose -p {threads} \
                 --min-depth {params.min_depth} \
                 --max-rounds {params.max_rounds} --model {params.model} \
@@ -446,7 +449,8 @@ rule deconvolve_junctions:
                 --absolute-error-thresh {params.absolute_error_thresh} \
                 --excess-thresh {params.excess_thresh} \
                 --completeness-thresh {params.completeness_thresh} \
-                {input} {output}
+                --checkpoint-dir {output.checkpoint_dir} \
+                {input} {output.final}
         """
 
 
