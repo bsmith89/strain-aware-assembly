@@ -440,7 +440,9 @@ rule smooth_depths:
 rule deconvolve_junctions:
     output:
         final="{stem}.deconvolve-{model}-{thresh}-{rounds}.sz",
-        checkpoint_dir=directory("{stem}.deconvolve-{model}-{thresh}-{rounds}.checkpoints.d"),
+        checkpoint_dir=directory(
+            "{stem}.deconvolve-{model}-{thresh}-{rounds}.checkpoints.d"
+        ),
     wildcard_constraints:
         model="log|lin",
         thresh=single_param_wc,
