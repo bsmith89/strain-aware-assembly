@@ -473,7 +473,7 @@ rule deconvolve_junctions:
 
         mkdir -p {output.checkpoint_dir}
 
-        strainzip assemble --verbose -p {threads} \
+        strainzip deconvolve --verbose -p {threads} \
                 --min-depth {params.min_depth} \
                 --max-rounds {params.max_rounds} --model {params.model} \
                 --score-thresh {params.score_thresh} \
