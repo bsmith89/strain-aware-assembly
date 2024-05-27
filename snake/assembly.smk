@@ -150,6 +150,69 @@ rule construct_two_genome_input_table:
         )
 
 
+rule run_kmtricks_repart:
+    output:
+        repart_flag="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d/checkpoints/repart.flag",
+    input:
+        "{stem}.kmtricks_input.txt",
+    params:
+        workdir="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
+        ksize=lambda w: int(w.ksize),
+        num_partitions=32,  # This number must match the number used in compiling all the merge partitions.
+    conda:
+        "conda/kmtricks.yaml"
+    threads: 8
+    shell:
+        """
+        rm -r {params.workdir}  # Snakemake auto-builds this directory, so I need to delete it for kmtricks to run.
+        kmtricks repart --run-dir {params.workdir} \
+                --threads {threads} --verbose info \
+                --kmer-size {params.ksize} \
+                --nb-partitions {params.num_partitions} \
+                --file {input}
+        mkdir {params.workdir}/checkpoints
+        touch {output.repart_flag}
+        """
+
+
+rule run_kmtricks_superk:
+    output:
+        superk_flag="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d/checkpoints/{mgen}.superk.flag",
+    input:
+        repart_flag="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d/checkpoints/repart.flag",
+    params:
+        workdir="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
+    conda:
+        "conda/kmtricks.yaml"
+    threads: 1
+    shell:
+        """
+        kmtricks superk --threads {threads} --verbose info --run-dir {params.workdir} --id {wildcards.mgen}
+        touch {output.superk_flag}
+        """
+
+
+rule run_kmtricks_count:
+    output:
+        count_flag="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d/checkpoints/{mgen}.count.flag",
+    input:
+        superk_flag="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d/checkpoints/{mgen}.superk.flag",
+    params:
+        workdir="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
+    conda:
+        "conda/kmtricks.yaml"
+    threads: 8
+    shell:
+        """
+        kmtricks count --run-dir {params.workdir} \
+                --threads {threads} --verbose info \
+                --mode kmer \
+                --hard-min 0 \
+                --id {wildcards.mgen}
+        touch {output.count_flag}
+        """
+
+
 # NOTE: --hard-min 0 and --share-min 1 always
 # or else some 0s will be censoring instead of actually
 # missing. (That's because counts below --hard-min are discarded
@@ -158,71 +221,31 @@ rule construct_two_genome_input_table:
 # --share-min samples.
 # With --hard-min 0 and --share-min 1, counts for a kmer are either
 # kept entirely or discarded entirely.
-rule run_kmtricks_pipeline:
+rule run_kmtricks_merge:
     output:
-        directory("{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d"),
+        merge_flag="data/group/{group}/{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d/matrices/matrix_{part}.count.txt",
     input:
-        "{stem}.kmtricks_input.txt",
-    wildcard_constraints:
-        ksize=integer_wc,
-        mincount=integer_wc,
-        recurrence=integer_wc,
+        count_flags=lambda w: [
+            f"data/group/{w.group}/{w.stem}.kmtricks-k{w.ksize}-m{w.mincount}-r{w.recurrence}.d/checkpoints/{mgen}.count.flag"
+            for mgen in config["mgen_group"][w.group]
+        ],
     params:
-        ksize=lambda w: int(w.ksize),
+        workdir="data/group/{group}/{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
         mincount=lambda w: int(w.mincount),
         recurrence=lambda w: int(w.recurrence),
-        num_partitions=32,
     conda:
         "conda/kmtricks.yaml"
     threads: 36
     shell:
         """
-        workdir={output}.tmp
-
-        # Repartition
-        echo "Start Repartition" >&2
-        kmtricks repart --run-dir $workdir \
-                --threads {threads} --verbose info \
-                --kmer-size {params.ksize} \
-                --nb-partitions {params.num_partitions} \
-                --file {input}
-
-        # SuperK
-        echo "Start SuperK" >&2
-        for partition in $(seq 0 31)
-        do
-            for sample_id in $(cut -d' ' -f1 {input})
-            do
-                echo "--restrict-to-list $partition --id $sample_id"
-            done
-        done \
-            | xargs -n 4 -P{threads} \
-                kmtricks superk --run-dir $workdir \
-                    --threads {threads} --verbose info
-
-        # Count
-        echo "Start Count" >&2
-        cut -d' ' -f1 {input} | xargs -n1 -I % \
-            kmtricks count --run-dir $workdir \
-                --threads {threads} --verbose info \
-                --mode kmer \
-                --hard-min 0 \
-                --id %
-
-        # Merge
-        echo "Start Merge" >&2
-        seq 0 31 | xargs -n1 -I % -P {threads} \
-            kmtricks merge --run-dir $workdir \
-                --threads 1 --verbose info \
-                --mode kmer:count:text \
-                --share-min 1 \
-                --soft-min {params.mincount} \
-                --recurrence-min {params.recurrence} \
-                --partition-id %
-
-        echo "Start Rename Results" >&2
-        mv $workdir/matrices {output}
-        mv $workdir {output}/workdir
+        kmtricks merge --run-dir {params.workdir} \
+            --threads 1 --verbose info \
+            --mode kmer:count:text \
+            --share-min 1 \
+            --soft-min {params.mincount} \
+            --recurrence-min {params.recurrence} \
+            --partition-id {wildcards.part}
+        touch {output.merge_flag}
         """
 
 
@@ -231,13 +254,16 @@ rule load_kmtricks_output_to_sqlite:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
     input:
         script="scripts/sample_list_to_sqlite_table_script.py",
-        counts="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
+        counts=lambda w: [
+            f"{w.stem}.kmtricks-k{w.ksize}-m{w.mincount}-r{w.recurrence}.d/matrices/matrix_{part}.count.txt"
+            for part in range(32)
+        ],
         sample_list="{stem}.kmtricks_input.txt",
     shell:
         """
         tmpdb=$(mktemp) && echo $tmpdb
         {input.script} {input.sample_list} {wildcards.ksize} | sqlite3 $tmpdb
-        sort -m {input.counts}/matrix_*.count.txt | tqdm --unit-scale 1 | sqlite3 -separator ' ' $tmpdb '.import /dev/stdin count_'
+        sort -m {input.counts} | tqdm --unit-scale 1 | sqlite3 -separator ' ' $tmpdb '.import /dev/stdin count_'
         mv $tmpdb {output}
         """
 
@@ -246,7 +272,10 @@ rule run_ggcat_on_kmtricks_kmers:
     output:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-denovo.fn",
     input:
-        kmers="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
+        counts=lambda w: [
+            f"{w.stem}.kmtricks-k{w.ksize}-m{w.mincount}-r{w.recurrence}.d/matrices/matrix_{part}.count.txt"
+            for part in range(32)
+        ],
     container:
         config["container"]["ggcat"]
     threads: 36
@@ -255,7 +284,7 @@ rule run_ggcat_on_kmtricks_kmers:
         input_dir=$(mktemp -d)
         echo $input_dir
 
-        for file in {input.kmers}/*.count.txt;
+        for file in {input.counts}
         do
             fasta=$input_dir/$(basename $file).fifo.fa
             echo making fifo $fasta
@@ -272,7 +301,10 @@ rule run_ggcat_on_kmtricks_kmers_and_include_xjin_refs:
     output:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-withref.fn",
     input:
-        kmers="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
+        counts=lambda w: [
+            f"{w.stem}.kmtricks-k{w.ksize}-m{w.mincount}-r{w.recurrence}.d/matrices/matrix_{part}.count.txt"
+            for part in range(32)
+        ],
         refs=lambda w: [
             f"data/genome/{genome}.fn" for genome in config["genome_group"]["xjin"]
         ],
@@ -289,7 +321,7 @@ rule run_ggcat_on_kmtricks_kmers_and_include_xjin_refs:
             ln -s $(realpath $file) $input_dir/$(basename $file).fa
         done
 
-        for file in {input.kmers}/*.count.txt;
+        for file in {input.counts}
         do
             fasta=$input_dir/$(basename $file).fifo.fa
             echo making fifo $fasta
