@@ -455,9 +455,13 @@ rule deconvolve_junctions:
             "{stem}.deconvolve-{model}-{thresh}-{rounds}.checkpoints.d"
         ),
     params:
-        model=lambda w: {"lognorm2": "OffsetLogNormal", "norm": "Normal", "lapl": "Laplace", "t5": "StudentsT --model-hyperparameters df=5"}[
-            w.model
-        ],
+        model=lambda w: {
+            "lognorm2": "OffsetLogNormal",
+            "norm": "Normal",
+            "lapl": "Laplace",
+            "t5": "StudentsT --model-hyperparameters df=5",
+            "huber": "Huber --model-hyperparameters delta=1",
+        }[w.model],
         min_depth=1.0,
         score_thresh=lambda w: float(w.thresh),
         relative_error_thresh=0.1,
