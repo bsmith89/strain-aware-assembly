@@ -652,8 +652,10 @@ rule quality_asses_assembly_against_all_refs:
         "conda/quast.yaml"
     shell:
         """
-        metaquast.py --threads={threads} --min-contig {params.min_tig_length} -r {params.refs} --output-dir {output.dir} {input.tigs}
+        metaquast.py --silent --fragmented --threads={threads} --min-contig {params.min_tig_length} -r {params.refs} --output-dir {output.dir} {input.tigs}
         cp {output.dir}/combined_reference/contigs_reports/alignments_*.tsv {output.contig_to_genome}
+        # Reduce storage requirements:
+        rm -rf {output.dir}/{{combined_reference/icarus_viewers,quast_corrected_input,runs_per_reference}}
         """
 
 
