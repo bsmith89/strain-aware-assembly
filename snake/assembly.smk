@@ -482,7 +482,7 @@ rule deconvolve_junctions:
 
         strainzip deconvolve --verbose -p {threads} \
                 --min-depth {params.min_depth} \
-                --max-rounds {params.max_rounds} --model {params.model} \
+                --skip-extra-large --max-rounds {params.max_rounds} --model {params.model} \
                 --score aic --score-thresh {params.score_thresh} \
                 --relative-error-thresh {params.relative_error_thresh} \
                 --absolute-error-thresh {params.absolute_error_thresh} \
