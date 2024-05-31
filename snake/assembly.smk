@@ -425,15 +425,19 @@ rule trim_tips_unpressed:
 
 rule smooth_depths:
     output:
-        "{stem}.smoothed.sz",
+        "{stem}.smoothed-{eps}.sz",
+    wildcard_constraints:
+        eps=integer_wc,
     input:
         "{stem}.sz",
+    params:
+        eps=lambda w: 10**(-int(w.eps))
     conda:
         "conda/strainzip.yaml"
     threads: 36
     shell:
         """
-        strainzip smooth --verbose -p {threads} {input} {output}
+        strainzip smooth --verbose -p {threads} --eps {params.eps} {input} {output}
         """
 
 
