@@ -444,13 +444,13 @@ rule deconvolve_junctions:
             "{stem}.deconvolve-{model}-{thresh}-{rounds}.checkpoints.d"
         ),
     wildcard_constraints:
-        model="log|lin",
+        model=single_param_wc,
         thresh=single_param_wc,
         rounds=single_param_wc,
     input:
         "{stem}.sz",
     params:
-        model=lambda w: {"log": "LogPlusAlphaLogNormal", "lin": "SoftPlusNormal"}[
+        model=lambda w: {"oln": "OffsetLogNormal", "norm": "SoftplusNormal", "lapl": "Laplace", "st": "StudentsT"}[
             w.model
         ],
         min_depth=1.0,
