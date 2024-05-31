@@ -493,6 +493,76 @@ rule deconvolve_junctions:
         """
 
 
+rule cluster_vertices:
+    output:
+        vertex="{stem}.clust-{thresh}.vertex.tsv",
+        segment="{stem}.clust-{thresh}.segment.tsv",
+        depth="{stem}.clust-{thresh}.depth.tsv",
+        shared="{stem}.clust-{thresh}.shared.tsv",
+        meta="{stem}.clust-{thresh}.meta.tsv",
+    input:
+        '{stem}.sz'
+    params:
+        num_preclust=10000,
+        thresh=lambda w: int(w.thresh) / 1000,
+        exponent=1/2,
+    threads: 12
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        """
+        strainzip cluster --verbose \
+                --num-preclust {params.num_preclust} --exponent {params.exponent} \
+                {input} {params.thresh} {output.vertex} {output.segment} {output.depth} {output.shared} {output.meta}
+        """
+
+rule extract_unassembled_cluster_subgraph:
+    output:
+        graph="{stemA}.ggcat-{unitig_source}.{stemB}.clust-{thresh}.unassembled-c{clust}-r{radius}.sz",
+    wildcard_constraints:
+        radius=integer_wc,
+    input:
+        graph="{stemA}.ggcat-{unitig_source}.sz",
+        segment="{stemA}.ggcat-{unitig_source}.{stemB}.clust-{thresh}.segment.tsv",
+    params:
+        clust=lambda w: int(w.clust),
+        radius=lambda w: int(w.radius),
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        """
+        strainzip focus --verbose \
+                --radius {params.radius} \
+                --segments <(awk '$2 == {params.clust} {{print $1}}' {input.segment}) \
+                {input.graph} \
+                {output.graph}
+        """
+
+rule extract_assembled_cluster_subgraph:
+    output:
+        graph="{stem}.clust-{thresh}.assembled-c{clust}-r{radius}.sz",
+    wildcard_constraints:
+        radius=integer_wc,
+    input:
+        graph="{stem}.sz",
+        vertex="{stem}.clust-{thresh}.vertex.tsv",
+    params:
+        clust=lambda w: int(w.clust),
+        radius=lambda w: int(w.radius),
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        """
+        strainzip focus --verbose \
+                --radius {params.radius} \
+                --vertices <(awk '$2 == {params.clust} {{print $1}}' {input.vertex}) \
+                {input.graph} \
+                {output.graph}
+        """
+
+
+
+
 rule extract_assembly_results:
     output:
         fasta="{stemA}.ggcat-{unitig_source}.{stemB}.fn",
