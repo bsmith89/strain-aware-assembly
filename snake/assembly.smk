@@ -455,7 +455,7 @@ rule deconvolve_junctions:
             "{stem}.deconvolve-{model}-{thresh}-{rounds}.checkpoints.d"
         ),
     params:
-        model=lambda w: {"oln": "OffsetLogNormal", "norm": "SoftplusNormal", "lapl": "Laplace", "st": "StudentsT"}[
+        model=lambda w: {"lognorm2": "OffsetLogNormal", "norm": "Normal", "lapl": "Laplace", "t5": "StudentsT --model-hyperparameters df=5"}[
             w.model
         ],
         min_depth=1.0,
