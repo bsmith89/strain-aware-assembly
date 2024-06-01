@@ -431,7 +431,7 @@ rule smooth_depths:
     input:
         "{stem}.sz",
     params:
-        eps=lambda w: 10**(-int(w.eps))
+        eps=lambda w: 10 ** (-int(w.eps)),
     conda:
         "conda/strainzip.yaml"
     threads: 36
@@ -505,11 +505,11 @@ rule cluster_vertices:
         shared="{stem}.clust-{thresh}.shared.tsv",
         meta="{stem}.clust-{thresh}.meta.tsv",
     input:
-        '{stem}.sz'
+        "{stem}.sz",
     params:
         num_preclust=10000,
         thresh=lambda w: int(w.thresh) / 1000,
-        exponent=1/2,
+        exponent=1 / 2,
     threads: 12
     conda:
         "conda/strainzip.yaml"
@@ -519,6 +519,7 @@ rule cluster_vertices:
                 --num-preclust {params.num_preclust} --exponent {params.exponent} \
                 {input} {params.thresh} {output.vertex} {output.segment} {output.depth} {output.shared} {output.meta}
         """
+
 
 rule extract_unassembled_cluster_subgraph:
     output:
@@ -542,6 +543,7 @@ rule extract_unassembled_cluster_subgraph:
                 {output.graph}
         """
 
+
 rule extract_assembled_cluster_subgraph:
     output:
         graph="{stem}.clust-{thresh}.assembled-c{clust}-r{radius}.sz",
@@ -563,8 +565,6 @@ rule extract_assembled_cluster_subgraph:
                 {input.graph} \
                 {output.graph}
         """
-
-
 
 
 rule extract_assembly_results:
