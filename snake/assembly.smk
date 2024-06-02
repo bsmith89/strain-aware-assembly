@@ -649,7 +649,9 @@ rule quality_asses_assembly_against_all_refs:
         ],
     threads: 12
     params:
-        min_tig_length=500,
+        min_tig_length=200,
+        min_identity=99,
+        min_alignment=100,  # FIXME: Should really be ksize
         refs=lambda w: ",".join(
             [f"data/genome/{genome}.fn" for genome in config["genome_group"][w.group]]
         ),
@@ -657,7 +659,12 @@ rule quality_asses_assembly_against_all_refs:
         "conda/quast.yaml"
     shell:
         """
-        metaquast.py --silent --fragmented --threads={threads} --min-contig {params.min_tig_length} -r {params.refs} --output-dir {output.dir} {input.tigs}
+        metaquast.py --silent --threads={threads} \
+                --fragmented --min-contig {params.min_tig_length} \
+                --min-alignment {params.min_alignment} --min-identity {params.min_identity} \
+                -r {params.refs} \
+                --output-dir {output.dir} \
+                {input.tigs}
         cp {output.dir}/combined_reference/contigs_reports/alignments_*.tsv {output.contig_to_genome}
         # Reduce storage requirements:
         rm -rf {output.dir}/{{combined_reference/icarus_viewers,quast_corrected_input,runs_per_reference}}
