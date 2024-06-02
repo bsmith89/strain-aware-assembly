@@ -158,7 +158,7 @@ rule run_kmtricks_repart:
     params:
         workdir="{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.d",
         ksize=lambda w: int(w.ksize),
-        num_partitions=32,  # This number must match the number used in compiling all the merge partitions.
+        num_partitions=32,  # NOTE: This determines the parallelizability of the merging step.
     conda:
         "conda/kmtricks.yaml"
     threads: 8
@@ -235,7 +235,7 @@ rule run_kmtricks_merge:
         recurrence=lambda w: int(w.recurrence),
     conda:
         "conda/kmtricks.yaml"
-    threads: 36
+    threads: 1
     shell:
         """
         kmtricks merge --run-dir {params.workdir} \
