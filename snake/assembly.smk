@@ -376,6 +376,7 @@ rule calculate_mean_unitig_depths_across_samples:
         """
         tmpdb=$(mktemp) && echo $tmpdb
         strainzip depth --verbose --preload --tmpdb $tmpdb -p {threads} {input.fasta} {input.db} {wildcards.ksize} {params.sample_list} {output}
+        rm $tmpdb
         """
 
 
@@ -567,7 +568,7 @@ rule extract_assembled_cluster_subgraph:
         """
 
 
-rule extract_assembly_results:
+rule dump_assembly_results:
     output:
         fasta="{stemA}.ggcat-{unitig_source}.{stemB}.fn",
         depth="{stemA}.ggcat-{unitig_source}.{stemB}.sequence_depth.nc",
@@ -581,7 +582,7 @@ rule extract_assembly_results:
     conda:
         "conda/strainzip.yaml"
     shell:
-        "strainzip extract --verbose {input.graph} {input.fasta} {input.depth} {output.segments} {output.depth} {output.fasta}"
+        "strainzip dump --verbose {input.graph} {input.fasta} {input.depth} {output.segments} {output.depth} {output.fasta}"
 
 
 rule megahit_assemble:
