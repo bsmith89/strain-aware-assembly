@@ -694,7 +694,7 @@ rule quality_asses_assembly_against_all_refs:
         ],
     threads: 12
     params:
-        min_tig_length=200,
+        min_tig_length=1000,
         min_identity=99,
         min_alignment=100,  # FIXME: Should really be ksize
         refs=lambda w: ",".join(
