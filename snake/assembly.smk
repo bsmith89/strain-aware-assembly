@@ -472,7 +472,7 @@ rule deconvolve_junctions:
         completeness_thresh=1,
     conda:
         "conda/strainzip.yaml"
-    threads: 36
+    threads: 48
     shell:
         """
         # FIXME: Figure out why setting environmental variables here is necessary.
