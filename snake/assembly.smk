@@ -458,7 +458,7 @@ rule deconvolve_junctions:
     params:
         model=lambda w: {
             "lognorm2": "OffsetLogNormal",
-            "norm": "Normal",
+            "norm": "Normal --model-hyperparameters tol=1e-4",
             "lapl": "Laplace",
             "t5": "StudentsT --model-hyperparameters df=5",
             "huber": "Huber --model-hyperparameters delta=1",
