@@ -263,7 +263,7 @@ rule load_kmtricks_output_to_sqlite:
         """
         tmpdb=$(mktemp) && echo $tmpdb
         {input.script} {input.sample_list} {wildcards.ksize} | sqlite3 $tmpdb
-        sort -m {input.counts} | tqdm --unit-scale 1 | sqlite3 -separator ' ' $tmpdb '.import /dev/stdin count_'
+        cat {input.counts} | tqdm --unit-scale 1 | sqlite3 -separator ' ' $tmpdb '.import /dev/stdin count_'
         mv $tmpdb {output}
         """
 
