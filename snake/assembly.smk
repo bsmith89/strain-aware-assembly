@@ -459,6 +459,7 @@ rule deconvolve_junctions:
         model=lambda w: {
             "lognorm2": "OffsetLogNormal",
             "norm": "Normal --model-hyperparameters tol=1e-4",
+            "normscaled": "NormalScaled --model-hyperparameters alpha=0.5",
             "lapl": "Laplace",
             "t5": "StudentsT --model-hyperparameters df=5",
             "huber": "Huber --model-hyperparameters delta=1",
@@ -509,7 +510,8 @@ rule benchmark_depth_model:
     params:
         model=lambda w: {
             "lognorm2": "OffsetLogNormal",
-            "norm": "Normal",
+            "norm": "Normal --model-hyperparameters tol=1e-4",
+            "normscaled": "NormalScaled --model-hyperparameters alpha=0.5",
             "lapl": "Laplace",
             "t5": "StudentsT --model-hyperparameters df=5",
             "huber": "Huber --model-hyperparameters delta=1",
