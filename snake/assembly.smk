@@ -442,9 +442,9 @@ rule smooth_depths:
         """
 
 
-rule deconvolve_junctions:
+rule unzip_junctions:
     output:
-        final="{stem}.deconvolve-{model}-{thresh}-{rounds}.sz",
+        final="{stem}.unzip-{model}-{thresh}-{rounds}.sz",
     wildcard_constraints:
         model=single_param_wc,
         thresh=single_param_wc,
@@ -453,7 +453,7 @@ rule deconvolve_junctions:
         "{stem}.sz",
     log:
         checkpoint_dir=directory(
-            "{stem}.deconvolve-{model}-{thresh}-{rounds}.checkpoints.d"
+            "{stem}.unzip-{model}-{thresh}-{rounds}.checkpoints.d"
         ),
     params:
         model=lambda w: {
@@ -486,7 +486,7 @@ rule deconvolve_junctions:
 
         mkdir -p {log.checkpoint_dir}
 
-        strainzip deconvolve --verbose -p {threads} \
+        strainzip unzip --verbose -p {threads} \
                 --min-depth {params.min_depth} \
                 --skip-extra-large --max-rounds {params.max_rounds} --model {params.model} \
                 --score aic --score-thresh {params.score_thresh} \
