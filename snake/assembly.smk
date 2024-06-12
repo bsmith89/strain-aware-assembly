@@ -442,6 +442,62 @@ rule smooth_depths:
         """
 
 
+rule unzip_safe_only_junctions:
+    output:
+        final="{stem}.unzip_safe-{model}-{thresh}-{rounds}.sz",
+    wildcard_constraints:
+        model=single_param_wc,
+        thresh=single_param_wc,
+        rounds=single_param_wc,
+    input:
+        "{stem}.sz",
+    log:
+        checkpoint_dir=directory("{stem}.unzip-{model}-{thresh}-{rounds}.checkpoints.d"),
+    params:
+        model=lambda w: {
+            "lognorm2": "OffsetLogNormal",
+            "norm": "Normal --model-hyperparameters tol=1e-4",
+            "normscaled": "NormalScaled --model-hyperparameters alpha=0.5",
+            "lapl": "Laplace",
+            "t5": "StudentsT --model-hyperparameters df=5",
+            "huber": "Huber --model-hyperparameters delta=1",
+        }[w.model],
+        min_depth=1.0,
+        score_thresh=lambda w: float(w.thresh),
+        relative_error_thresh=0.1,
+        absolute_error_thresh=1.0,
+        max_rounds=lambda w: int(w.rounds),
+        excess_thresh=0,
+        completeness_thresh=1,
+    conda:
+        "conda/strainzip.yaml"
+    threads: 48
+    shell:
+        """
+        # FIXME: Figure out why setting environmental variables here is necessary.
+        export XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1 --xla_force_host_platform_device_count=8"
+        export OPENBLAS_NUM_THREADS=1
+        export MKL_NUM_THREADS=1
+        export OMP_NUM_THREAD=1
+        export NUM_INTER_THREADS=1
+        export NUM_INTRA_THREADS=1
+
+        mkdir -p {log.checkpoint_dir}
+
+        strainzip unzip --verbose -p {threads} \
+                --min-depth {params.min_depth} \
+                --skip-canonical --skip-large --skip-extra-large \
+                --max-rounds {params.max_rounds} --model {params.model} \
+                --score aic --score-thresh {params.score_thresh} \
+                --relative-error-thresh {params.relative_error_thresh} \
+                --absolute-error-thresh {params.absolute_error_thresh} \
+                --excess-thresh {params.excess_thresh} \
+                --completeness-thresh {params.completeness_thresh} \
+                --checkpoint-dir {log.checkpoint_dir} \
+                {input} {output.final}
+        """
+
+
 rule unzip_junctions:
     output:
         final="{stem}.unzip-{model}-{thresh}-{rounds}.sz",
