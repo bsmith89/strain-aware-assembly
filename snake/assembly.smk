@@ -544,39 +544,55 @@ rule benchmark_depth_model:
                 {input} {output}
         """
 
-
-rule cluster_vertices:
+rule precluster_vertices:
     output:
-        vertex="{stem}.clust-{thresh}.vertex.tsv",
-        segment="{stem}.clust-{thresh}.segment.tsv",
-        depth="{stem}.clust-{thresh}.depth.tsv",
-        shared="{stem}.clust-{thresh}.shared.tsv",
-        meta="{stem}.clust-{thresh}.meta.tsv",
+        vertex="{stem}.preclust-e{exponent}.vertex.tsv",
     input:
         "{stem}.sz",
     params:
-        num_preclust=10000,
+        exponent=lambda w: int(w.exponent) / 100,
+        num_preclust=10_000,
+    threads: 12
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        """
+        strainzip precluster --verbose {input} --exponent {params.exponent} {params.num_preclust} {output}
+        """
+
+rule cluster_vertices:
+    output:
+        vertex="{stem}.clust-e{exponent}-d{thresh}.vertex.tsv",
+        segment="{stem}.clust-e{exponent}-d{thresh}.segment.tsv",
+        depth="{stem}.clust-e{exponent}-d{thresh}.depth.tsv",
+        shared="{stem}.clust-e{exponent}-d{thresh}.shared.tsv",
+        meta="{stem}.clust-e{exponent}-d{thresh}.meta.tsv",
+    input:
+        graph="{stem}.sz",
+        preclust="{stem}.preclust-e{exponent}.vertex.tsv",
+    params:
         thresh=lambda w: int(w.thresh) / 1000,
-        exponent=1 / 2,
+        exponent=lambda w: int(w.exponent) / 100,
     threads: 12
     conda:
         "conda/strainzip.yaml"
     shell:
         """
         strainzip cluster --verbose \
-                --num-preclust {params.num_preclust} --exponent {params.exponent} \
-                {input} {params.thresh} {output.vertex} {output.segment} {output.depth} {output.shared} {output.meta}
+                --exponent {params.exponent} \
+                {input.graph} {input.preclust} {params.thresh} {output.vertex} {output.segment} {output.depth} {output.shared} {output.meta}
         """
 
 
 rule extract_unassembled_cluster_subgraph:
     output:
-        graph="{stemA}.ggcat-{unitig_source}.{stemB}.clust-{thresh}.unassembled-c{clust}-r{radius}.sz",
+        graph="{stemA}.ggcat-{unitig_source}.{stemB}.clust-e{exponent}-d{thresh}.unassembled-c{clust}-r{radius}.sz",
     wildcard_constraints:
         radius=integer_wc,
+        unitig_source=single_param_wc,
     input:
         graph="{stemA}.ggcat-{unitig_source}.sz",
-        segment="{stemA}.ggcat-{unitig_source}.{stemB}.clust-{thresh}.segment.tsv",
+        segment="{stemA}.ggcat-{unitig_source}.{stemB}.clust-e{exponent}-d{thresh}.segment.tsv",
     params:
         clust=lambda w: int(w.clust),
         radius=lambda w: int(w.radius),
