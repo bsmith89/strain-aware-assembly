@@ -684,21 +684,6 @@ rule megahit_assemble:
         """
 
 
-rule quality_asses_assembly_against_one_ref:
-    output:
-        directory("{stem}.gquast-{genome}.d"),
-    input:
-        tigs="{stem}.fn",
-        ref="data/genome/{genome}.fn",
-    threads: 24
-    params:
-        min_tig_length=1000,
-    conda:
-        "conda/quast.yaml"
-    shell:
-        """
-        metaquast.py --threads={threads} --min-contig {params.min_tig_length} -R {input.ref} --output-dir {output} {input.tigs}
-        """
 
 
 rule quality_asses_assembly_against_all_refs:
@@ -731,6 +716,30 @@ rule quality_asses_assembly_against_all_refs:
         cp {output.dir}/combined_reference/contigs_reports/alignments_*.tsv {output.contig_to_genome}
         # Reduce storage requirements:
         rm -rf {output.dir}/{{combined_reference/icarus_viewers,quast_corrected_input,runs_per_reference}}
+        """
+
+
+rule quality_asses_assembly_against_one_ref:
+    output:
+        dir=directory("{stem}.gquast-{genome}.d"),
+    input:
+        tigs="{stem}.fn",
+        ref="data/genome/{genome}.fn",
+    threads: 12
+    params:
+        min_tig_length=100,
+        min_identity=95,
+        min_alignment=50,  # FIXME: Should really be ksize
+    conda:
+        "conda/quast.yaml"
+    shell:
+        """
+        quast --silent --threads={threads} \
+                --fragmented --min-contig {params.min_tig_length} \
+                --min-alignment {params.min_alignment} --min-identity {params.min_identity} \
+                -r {input.ref} \
+                --output-dir {output.dir} \
+                {input.tigs}
         """
 
 
