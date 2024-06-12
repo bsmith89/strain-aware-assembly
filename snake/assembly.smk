@@ -452,9 +452,7 @@ rule unzip_junctions:
     input:
         "{stem}.sz",
     log:
-        checkpoint_dir=directory(
-            "{stem}.unzip-{model}-{thresh}-{rounds}.checkpoints.d"
-        ),
+        checkpoint_dir=directory("{stem}.unzip-{model}-{thresh}-{rounds}.checkpoints.d"),
     params:
         model=lambda w: {
             "lognorm2": "OffsetLogNormal",
@@ -544,6 +542,7 @@ rule benchmark_depth_model:
                 {input} {output}
         """
 
+
 rule precluster_vertices:
     output:
         vertex="{stem}.preclust-e{exponent}.vertex.tsv",
@@ -559,6 +558,7 @@ rule precluster_vertices:
         """
         strainzip precluster --verbose {input} --exponent {params.exponent} {params.num_preclust} {output}
         """
+
 
 rule cluster_vertices:
     output:
