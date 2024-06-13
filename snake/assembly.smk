@@ -452,7 +452,7 @@ rule unzip_safe_only_junctions:
     input:
         "{stem}.sz",
     log:
-        checkpoint_dir=directory("{stem}.unzip-{model}-{thresh}-{rounds}.checkpoints.d"),
+        checkpoint_dir=directory("{stem}.unzip_safe-{model}-{thresh}-{rounds}.checkpoints.d"),
     params:
         model=lambda w: {
             "lognorm2": "OffsetLogNormal",
