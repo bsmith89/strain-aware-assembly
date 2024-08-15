@@ -63,7 +63,7 @@ ruleorder: alias_GRCh38_index_file > bowtie_index_build
 
 rule alias_raw_read_r1:
     output:
-        "sdata/reads/{mgen}/r1.fq.gz",
+        "data/reads/{mgen}/r1.fq.gz",
     input:
         lambda w: config["mgen"]["r1_path"][w.mgen],
     shell:
@@ -76,7 +76,7 @@ localrules:
 
 rule alias_raw_read_r2:
     output:
-        "sdata/reads/{mgen}/r2.fq.gz",
+        "data/reads/{mgen}/r2.fq.gz",
     input:
         lambda w: config["mgen"]["r2_path"][w.mgen],
     shell:
@@ -85,6 +85,32 @@ rule alias_raw_read_r2:
 
 localrules:
     alias_raw_read_r2,
+
+
+rule alias_raw_read_r1_safe:
+    output:
+        "sdata/reads/{mgen}/r1.fq.gz",
+    input:
+        lambda w: config["mgen"]["r1_path"][w.mgen],
+    shell:
+        alias_recipe
+
+
+localrules:
+    alias_raw_read_r1_safe,
+
+
+rule alias_raw_read_r2_safe:
+    output:
+        "sdata/reads/{mgen}/r2.fq.gz",
+    input:
+        lambda w: config["mgen"]["r2_path"][w.mgen],
+    shell:
+        alias_recipe
+
+
+localrules:
+    alias_raw_read_r2_safe,
 
 
 # {{{1 Process data
@@ -222,13 +248,13 @@ rule filter_out_host:
         )
 
 
-# NOTE: Hub-rule: Comment out this rule to reduce DAG-building time
-# once all libraries have been processed
 rule alias_cleaned_reads:
     output:
-        "data/{stem}.proc.fq.gz",
+        "data/reads/{mgen}/{r}.proc.fq.gz",
     input:
-        f"data/{{stem}}.{config['proc']}.fq.gz",
+        lambda w: f"data/reads/{w.mgen}/{w.r}."
+        + config["mgen"]["preprocessing"][w.mgen]
+        + ".fq.gz",
     shell:
         alias_recipe
 

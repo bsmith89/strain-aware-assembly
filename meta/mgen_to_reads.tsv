@@ -1,0 +1,619 @@
+mgen_id	preprocessing	sra_accession	r1_path	r2_path
+Bacteroides-thetaiotaomicron-1-1-6_MAF-2_wgs_reads	dedup.deadapt.qtrim	SRR24651254	raw/sra/SRR24651254_1.fq.gz	raw/sra/SRR24651254_2.fq.gz
+Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_wgs_reads	dedup.deadapt.qtrim	SRR24651305	raw/sra/SRR24651305_1.fq.gz	raw/sra/SRR24651305_2.fq.gz
+watson_DB_R04_CDI_P_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712816	raw/sra/SRR13712816_1.fq.gz	raw/sra/SRR13712816_2.fq.gz
+watson_DB_R04_CDI_P_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712817	raw/sra/SRR13712817_1.fq.gz	raw/sra/SRR13712817_2.fq.gz
+watson_DB_R03_CDI_P_08_POST	hfilt.dedup.deadapt.qtrim	SRR13712818	raw/sra/SRR13712818_1.fq.gz	raw/sra/SRR13712818_2.fq.gz
+watson_DB_R03_CDI_P_07_POST	hfilt.dedup.deadapt.qtrim	SRR13712819	raw/sra/SRR13712819_1.fq.gz	raw/sra/SRR13712819_2.fq.gz
+watson_DB_R03_CDI_P_06_POST	hfilt.dedup.deadapt.qtrim	SRR13712820	raw/sra/SRR13712820_1.fq.gz	raw/sra/SRR13712820_2.fq.gz
+watson_DB_R03_CDI_P_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712821	raw/sra/SRR13712821_1.fq.gz	raw/sra/SRR13712821_2.fq.gz
+watson_DA_D_10	hfilt.dedup.deadapt.qtrim	SRR13712822	raw/sra/SRR13712822_1.fq.gz	raw/sra/SRR13712822_2.fq.gz
+watson_DB_R03_CDI_P_04_POST	hfilt.dedup.deadapt.qtrim	SRR13712823	raw/sra/SRR13712823_1.fq.gz	raw/sra/SRR13712823_2.fq.gz
+watson_DB_R03_CDI_P_03_POST	hfilt.dedup.deadapt.qtrim	SRR13712824	raw/sra/SRR13712824_1.fq.gz	raw/sra/SRR13712824_2.fq.gz
+watson_DB_R03_CDI_P_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712825	raw/sra/SRR13712825_1.fq.gz	raw/sra/SRR13712825_2.fq.gz
+watson_DB_R03_CDI_P_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712826	raw/sra/SRR13712826_1.fq.gz	raw/sra/SRR13712826_2.fq.gz
+watson_DB_R02_CDI_C_06_POST	hfilt.dedup.deadapt.qtrim	SRR13712827	raw/sra/SRR13712827_1.fq.gz	raw/sra/SRR13712827_2.fq.gz
+watson_DB_R02_CDI_C_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712828	raw/sra/SRR13712828_1.fq.gz	raw/sra/SRR13712828_2.fq.gz
+watson_DB_R02_CDI_C_04_POST	hfilt.dedup.deadapt.qtrim	SRR13712829	raw/sra/SRR13712829_1.fq.gz	raw/sra/SRR13712829_2.fq.gz
+watson_DB_R02_CDI_C_03_POST	hfilt.dedup.deadapt.qtrim	SRR13712830	raw/sra/SRR13712830_1.fq.gz	raw/sra/SRR13712830_2.fq.gz
+watson_DB_R02_CDI_C_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712831	raw/sra/SRR13712831_1.fq.gz	raw/sra/SRR13712831_2.fq.gz
+watson_DB_R02_CDI_C_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712832	raw/sra/SRR13712832_1.fq.gz	raw/sra/SRR13712832_2.fq.gz
+watson_DA_D_09	hfilt.dedup.deadapt.qtrim	SRR13712833	raw/sra/SRR13712833_1.fq.gz	raw/sra/SRR13712833_2.fq.gz
+watson_DB_R01_CDI_C_07_POST	hfilt.dedup.deadapt.qtrim	SRR13712834	raw/sra/SRR13712834_1.fq.gz	raw/sra/SRR13712834_2.fq.gz
+watson_DB_R01_CDI_C_06_POST	hfilt.dedup.deadapt.qtrim	SRR13712835	raw/sra/SRR13712835_1.fq.gz	raw/sra/SRR13712835_2.fq.gz
+watson_DB_R01_CDI_C_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712836	raw/sra/SRR13712836_1.fq.gz	raw/sra/SRR13712836_2.fq.gz
+watson_DB_R01_CDI_C_04_POST	hfilt.dedup.deadapt.qtrim	SRR13712837	raw/sra/SRR13712837_1.fq.gz	raw/sra/SRR13712837_2.fq.gz
+watson_DB_R01_CDI_C_03_POST	hfilt.dedup.deadapt.qtrim	SRR13712838	raw/sra/SRR13712838_1.fq.gz	raw/sra/SRR13712838_2.fq.gz
+watson_DB_R01_CDI_C_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712839	raw/sra/SRR13712839_1.fq.gz	raw/sra/SRR13712839_2.fq.gz
+watson_DB_R01_CDI_C_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712840	raw/sra/SRR13712840_1.fq.gz	raw/sra/SRR13712840_2.fq.gz
+watson_DB_D_15	hfilt.dedup.deadapt.qtrim	SRR13712841	raw/sra/SRR13712841_1.fq.gz	raw/sra/SRR13712841_2.fq.gz
+watson_DB_D_14	hfilt.dedup.deadapt.qtrim	SRR13712842	raw/sra/SRR13712842_1.fq.gz	raw/sra/SRR13712842_2.fq.gz
+watson_DB_D_13	hfilt.dedup.deadapt.qtrim	SRR13712843	raw/sra/SRR13712843_1.fq.gz	raw/sra/SRR13712843_2.fq.gz
+watson_DA_D_08	hfilt.dedup.deadapt.qtrim	SRR13712844	raw/sra/SRR13712844_1.fq.gz	raw/sra/SRR13712844_2.fq.gz
+watson_DB_D_12	hfilt.dedup.deadapt.qtrim	SRR13712845	raw/sra/SRR13712845_1.fq.gz	raw/sra/SRR13712845_2.fq.gz
+watson_DB_D_10	hfilt.dedup.deadapt.qtrim	SRR13712846	raw/sra/SRR13712846_1.fq.gz	raw/sra/SRR13712846_2.fq.gz
+watson_DB_D_09	hfilt.dedup.deadapt.qtrim	SRR13712847	raw/sra/SRR13712847_1.fq.gz	raw/sra/SRR13712847_2.fq.gz
+watson_DB_D_08	hfilt.dedup.deadapt.qtrim	SRR13712848	raw/sra/SRR13712848_1.fq.gz	raw/sra/SRR13712848_2.fq.gz
+watson_DB_D_11	hfilt.dedup.deadapt.qtrim	SRR13712849	raw/sra/SRR13712849_1.fq.gz	raw/sra/SRR13712849_2.fq.gz
+watson_DB_D_07	hfilt.dedup.deadapt.qtrim	SRR13712850	raw/sra/SRR13712850_1.fq.gz	raw/sra/SRR13712850_2.fq.gz
+watson_DB_D_06	hfilt.dedup.deadapt.qtrim	SRR13712851	raw/sra/SRR13712851_1.fq.gz	raw/sra/SRR13712851_2.fq.gz
+watson_DB_D_05	hfilt.dedup.deadapt.qtrim	SRR13712852	raw/sra/SRR13712852_1.fq.gz	raw/sra/SRR13712852_2.fq.gz
+watson_DB_D_04	hfilt.dedup.deadapt.qtrim	SRR13712853	raw/sra/SRR13712853_1.fq.gz	raw/sra/SRR13712853_2.fq.gz
+watson_DA_D_07	hfilt.dedup.deadapt.qtrim	SRR13712854	raw/sra/SRR13712854_1.fq.gz	raw/sra/SRR13712854_2.fq.gz
+watson_DB_D_02	hfilt.dedup.deadapt.qtrim	SRR13712855	raw/sra/SRR13712855_1.fq.gz	raw/sra/SRR13712855_2.fq.gz
+watson_DA_R03_CDI_C_03_PRE	hfilt.dedup.deadapt.qtrim	SRR13712856	raw/sra/SRR13712856_1.fq.gz	raw/sra/SRR13712856_2.fq.gz
+watson_DA_R03_CDI_C_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712857	raw/sra/SRR13712857_1.fq.gz	raw/sra/SRR13712857_2.fq.gz
+watson_DA_R03_CDI_C_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712858	raw/sra/SRR13712858_1.fq.gz	raw/sra/SRR13712858_2.fq.gz
+watson_DA_R02_CDI_C_07_POST	hfilt.dedup.deadapt.qtrim	SRR13712859	raw/sra/SRR13712859_1.fq.gz	raw/sra/SRR13712859_2.fq.gz
+watson_DA_R02_CDI_C_06_POST	hfilt.dedup.deadapt.qtrim	SRR13712860	raw/sra/SRR13712860_1.fq.gz	raw/sra/SRR13712860_2.fq.gz
+watson_DA_R02_CDI_C_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712861	raw/sra/SRR13712861_1.fq.gz	raw/sra/SRR13712861_2.fq.gz
+watson_DA_R02_CDI_C_04_POST	hfilt.dedup.deadapt.qtrim	SRR13712862	raw/sra/SRR13712862_1.fq.gz	raw/sra/SRR13712862_2.fq.gz
+watson_DA_R02_CDI_C_03_POST	hfilt.dedup.deadapt.qtrim	SRR13712863	raw/sra/SRR13712863_1.fq.gz	raw/sra/SRR13712863_2.fq.gz
+watson_DA_R02_CDI_C_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712864	raw/sra/SRR13712864_1.fq.gz	raw/sra/SRR13712864_2.fq.gz
+watson_DA_R02_CDI_C_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712865	raw/sra/SRR13712865_1.fq.gz	raw/sra/SRR13712865_2.fq.gz
+watson_DA_D_04	hfilt.dedup.deadapt.qtrim	SRR13712866	raw/sra/SRR13712866_1.fq.gz	raw/sra/SRR13712866_2.fq.gz
+watson_DA_R01_CDI_P_08_PRE	hfilt.dedup.deadapt.qtrim	SRR13712867	raw/sra/SRR13712867_1.fq.gz	raw/sra/SRR13712867_2.fq.gz
+watson_DA_R01_CDI_P_06_POST	hfilt.dedup.deadapt.qtrim	SRR13712868	raw/sra/SRR13712868_1.fq.gz	raw/sra/SRR13712868_2.fq.gz
+watson_DA_R01_CDI_P_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712869	raw/sra/SRR13712869_1.fq.gz	raw/sra/SRR13712869_2.fq.gz
+watson_DA_R01_CDI_P_03_POST	hfilt.dedup.deadapt.qtrim	SRR13712870	raw/sra/SRR13712870_1.fq.gz	raw/sra/SRR13712870_2.fq.gz
+watson_DA_R01_CDI_P_02_POST	hfilt.dedup.deadapt.qtrim	SRR13712871	raw/sra/SRR13712871_1.fq.gz	raw/sra/SRR13712871_2.fq.gz
+watson_DA_R01_CDI_P_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712872	raw/sra/SRR13712872_1.fq.gz	raw/sra/SRR13712872_2.fq.gz
+watson_DA_D_23	hfilt.dedup.deadapt.qtrim	SRR13712873	raw/sra/SRR13712873_1.fq.gz	raw/sra/SRR13712873_2.fq.gz
+watson_DA_D_22	hfilt.dedup.deadapt.qtrim	SRR13712874	raw/sra/SRR13712874_1.fq.gz	raw/sra/SRR13712874_2.fq.gz
+watson_DB_D_01	hfilt.dedup.deadapt.qtrim	SRR13712875	raw/sra/SRR13712875_1.fq.gz	raw/sra/SRR13712875_2.fq.gz
+watson_DB_D_03	hfilt.dedup.deadapt.qtrim	SRR13712876	raw/sra/SRR13712876_1.fq.gz	raw/sra/SRR13712876_2.fq.gz
+watson_DA_R05_UC_C_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712877	raw/sra/SRR13712877_1.fq.gz	raw/sra/SRR13712877_2.fq.gz
+watson_DA_R05_UC_C_04_POST	hfilt.dedup.deadapt.qtrim	SRR13712878	raw/sra/SRR13712878_1.fq.gz	raw/sra/SRR13712878_2.fq.gz
+watson_DA_R05_UC_C_03_POST	hfilt.dedup.deadapt.qtrim	SRR13712879	raw/sra/SRR13712879_1.fq.gz	raw/sra/SRR13712879_2.fq.gz
+watson_DA_R05_UC_C_02_POST	hfilt.dedup.deadapt.qtrim	SRR13712880	raw/sra/SRR13712880_1.fq.gz	raw/sra/SRR13712880_2.fq.gz
+watson_DA_R04_UC_P_09_POST	hfilt.dedup.deadapt.qtrim	SRR13712881	raw/sra/SRR13712881_1.fq.gz	raw/sra/SRR13712881_2.fq.gz
+watson_DA_R04_UC_P_07_POST	hfilt.dedup.deadapt.qtrim	SRR13712882	raw/sra/SRR13712882_1.fq.gz	raw/sra/SRR13712882_2.fq.gz
+watson_DA_R04_UC_P_06_POST	hfilt.dedup.deadapt.qtrim	SRR13712883	raw/sra/SRR13712883_1.fq.gz	raw/sra/SRR13712883_2.fq.gz
+watson_DA_R05_UC_C_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712884	raw/sra/SRR13712884_1.fq.gz	raw/sra/SRR13712884_2.fq.gz
+watson_DA_D_06	hfilt.dedup.deadapt.qtrim	SRR13712885	raw/sra/SRR13712885_1.fq.gz	raw/sra/SRR13712885_2.fq.gz
+watson_DA_R04_UC_P_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712886	raw/sra/SRR13712886_1.fq.gz	raw/sra/SRR13712886_2.fq.gz
+watson_DA_R04_UC_P_04_POST	hfilt.dedup.deadapt.qtrim	SRR13712887	raw/sra/SRR13712887_1.fq.gz	raw/sra/SRR13712887_2.fq.gz
+watson_DA_R04_UC_P_03_POST	hfilt.dedup.deadapt.qtrim	SRR13712888	raw/sra/SRR13712888_1.fq.gz	raw/sra/SRR13712888_2.fq.gz
+watson_DA_R04_UC_P_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712889	raw/sra/SRR13712889_1.fq.gz	raw/sra/SRR13712889_2.fq.gz
+watson_DA_R04_UC_P_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712890	raw/sra/SRR13712890_1.fq.gz	raw/sra/SRR13712890_2.fq.gz
+watson_DA_R03_CDI_C_08_POST	hfilt.dedup.deadapt.qtrim	SRR13712891	raw/sra/SRR13712891_1.fq.gz	raw/sra/SRR13712891_2.fq.gz
+watson_DA_R03_CDI_C_07_POST	hfilt.dedup.deadapt.qtrim	SRR13712892	raw/sra/SRR13712892_1.fq.gz	raw/sra/SRR13712892_2.fq.gz
+watson_DA_R03_CDI_C_06_POST	hfilt.dedup.deadapt.qtrim	SRR13712893	raw/sra/SRR13712893_1.fq.gz	raw/sra/SRR13712893_2.fq.gz
+watson_DA_R03_CDI_C_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712894	raw/sra/SRR13712894_1.fq.gz	raw/sra/SRR13712894_2.fq.gz
+watson_DA_R03_CDI_C_04_POST	hfilt.dedup.deadapt.qtrim	SRR13712895	raw/sra/SRR13712895_1.fq.gz	raw/sra/SRR13712895_2.fq.gz
+watson_DA_D_03	hfilt.dedup.deadapt.qtrim	SRR13712896	raw/sra/SRR13712896_1.fq.gz	raw/sra/SRR13712896_2.fq.gz
+watson_DA_D_21	hfilt.dedup.deadapt.qtrim	SRR13712897	raw/sra/SRR13712897_1.fq.gz	raw/sra/SRR13712897_2.fq.gz
+watson_DA_D_24	hfilt.dedup.deadapt.qtrim	SRR13712898	raw/sra/SRR13712898_1.fq.gz	raw/sra/SRR13712898_2.fq.gz
+watson_DA_D_05	hfilt.dedup.deadapt.qtrim	SRR13712899	raw/sra/SRR13712899_1.fq.gz	raw/sra/SRR13712899_2.fq.gz
+watson_DA_D_20	hfilt.dedup.deadapt.qtrim	SRR13712900	raw/sra/SRR13712900_1.fq.gz	raw/sra/SRR13712900_2.fq.gz
+watson_DA_D_19	hfilt.dedup.deadapt.qtrim	SRR13712901	raw/sra/SRR13712901_1.fq.gz	raw/sra/SRR13712901_2.fq.gz
+watson_DA_D_18	hfilt.dedup.deadapt.qtrim	SRR13712902	raw/sra/SRR13712902_1.fq.gz	raw/sra/SRR13712902_2.fq.gz
+watson_DA_D_16	hfilt.dedup.deadapt.qtrim	SRR13712903	raw/sra/SRR13712903_1.fq.gz	raw/sra/SRR13712903_2.fq.gz
+watson_DA_D_15	hfilt.dedup.deadapt.qtrim	SRR13712904	raw/sra/SRR13712904_1.fq.gz	raw/sra/SRR13712904_2.fq.gz
+watson_DA_D_14	hfilt.dedup.deadapt.qtrim	SRR13712905	raw/sra/SRR13712905_1.fq.gz	raw/sra/SRR13712905_2.fq.gz
+watson_DA_D_17	hfilt.dedup.deadapt.qtrim	SRR13712906	raw/sra/SRR13712906_1.fq.gz	raw/sra/SRR13712906_2.fq.gz
+watson_DA_D_13	hfilt.dedup.deadapt.qtrim	SRR13712907	raw/sra/SRR13712907_1.fq.gz	raw/sra/SRR13712907_2.fq.gz
+watson_DA_D_12	hfilt.dedup.deadapt.qtrim	SRR13712908	raw/sra/SRR13712908_1.fq.gz	raw/sra/SRR13712908_2.fq.gz
+watson_DB_R05_UC_P_06_POST	hfilt.dedup.deadapt.qtrim	SRR13712909	raw/sra/SRR13712909_1.fq.gz	raw/sra/SRR13712909_2.fq.gz
+watson_DB_R05_UC_P_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712910	raw/sra/SRR13712910_1.fq.gz	raw/sra/SRR13712910_2.fq.gz
+watson_DB_R05_UC_P_04_POST	hfilt.dedup.deadapt.qtrim	SRR13712911	raw/sra/SRR13712911_1.fq.gz	raw/sra/SRR13712911_2.fq.gz
+watson_DB_R05_UC_P_03_POST	hfilt.dedup.deadapt.qtrim	SRR13712912	raw/sra/SRR13712912_1.fq.gz	raw/sra/SRR13712912_2.fq.gz
+watson_DB_R05_UC_P_02_POST	hfilt.dedup.deadapt.qtrim	SRR13712913	raw/sra/SRR13712913_1.fq.gz	raw/sra/SRR13712913_2.fq.gz
+watson_DB_R05_UC_P_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712914	raw/sra/SRR13712914_1.fq.gz	raw/sra/SRR13712914_2.fq.gz
+watson_DB_R04_CDI_P_09_POST	hfilt.dedup.deadapt.qtrim	SRR13712915	raw/sra/SRR13712915_1.fq.gz	raw/sra/SRR13712915_2.fq.gz
+watson_DB_R04_CDI_P_08_POST	hfilt.dedup.deadapt.qtrim	SRR13712916	raw/sra/SRR13712916_1.fq.gz	raw/sra/SRR13712916_2.fq.gz
+watson_DB_R04_CDI_P_07_POST	hfilt.dedup.deadapt.qtrim	SRR13712917	raw/sra/SRR13712917_1.fq.gz	raw/sra/SRR13712917_2.fq.gz
+watson_DA_D_11	hfilt.dedup.deadapt.qtrim	SRR13712918	raw/sra/SRR13712918_1.fq.gz	raw/sra/SRR13712918_2.fq.gz
+watson_DA_D_02	hfilt.dedup.deadapt.qtrim	SRR13712919	raw/sra/SRR13712919_1.fq.gz	raw/sra/SRR13712919_2.fq.gz
+watson_DA_D_01	hfilt.dedup.deadapt.qtrim	SRR13712920	raw/sra/SRR13712920_1.fq.gz	raw/sra/SRR13712920_2.fq.gz
+watson_DB_R04_CDI_P_06_POST	hfilt.dedup.deadapt.qtrim	SRR13712921	raw/sra/SRR13712921_1.fq.gz	raw/sra/SRR13712921_2.fq.gz
+watson_DB_R04_CDI_P_05_POST	hfilt.dedup.deadapt.qtrim	SRR13712922	raw/sra/SRR13712922_1.fq.gz	raw/sra/SRR13712922_2.fq.gz
+watson_DB_R04_CDI_P_04_POST	hfilt.dedup.deadapt.qtrim	SRR13712923	raw/sra/SRR13712923_1.fq.gz	raw/sra/SRR13712923_2.fq.gz
+watson_DB_R04_CDI_P_03_POST	hfilt.dedup.deadapt.qtrim	SRR13712924	raw/sra/SRR13712924_1.fq.gz	raw/sra/SRR13712924_2.fq.gz
+DS0044_002	hfilt.dedup.deadapt.qtrim		
+DS0044_003	hfilt.dedup.deadapt.qtrim		
+DS0044_004	hfilt.dedup.deadapt.qtrim		
+DS0044_005	hfilt.dedup.deadapt.qtrim		
+DS0044_006	hfilt.dedup.deadapt.qtrim		
+DS0044_007	hfilt.dedup.deadapt.qtrim		
+DS0044_008	hfilt.dedup.deadapt.qtrim		
+DS0044_009	hfilt.dedup.deadapt.qtrim		
+DS0044_010	hfilt.dedup.deadapt.qtrim		
+DS0044_011	hfilt.dedup.deadapt.qtrim		
+DS0097_001	hfilt.dedup.deadapt.qtrim		
+DS0097_002	hfilt.dedup.deadapt.qtrim		
+DS0097_003	hfilt.dedup.deadapt.qtrim		
+DS0097_004	hfilt.dedup.deadapt.qtrim		
+DS0097_005	hfilt.dedup.deadapt.qtrim		
+DS0097_006	hfilt.dedup.deadapt.qtrim		
+DS0097_007	hfilt.dedup.deadapt.qtrim		
+DS0097_008	hfilt.dedup.deadapt.qtrim		
+DS0097_009	hfilt.dedup.deadapt.qtrim		
+DS0097_010	hfilt.dedup.deadapt.qtrim		
+DS0097_011	hfilt.dedup.deadapt.qtrim		
+DS0097_012	hfilt.dedup.deadapt.qtrim		
+DS0097_013	hfilt.dedup.deadapt.qtrim		
+DS0097_014	hfilt.dedup.deadapt.qtrim		
+DS0097_015	hfilt.dedup.deadapt.qtrim		
+DS0097_016	hfilt.dedup.deadapt.qtrim		
+DS0097_017	hfilt.dedup.deadapt.qtrim		
+DS0097_022	hfilt.dedup.deadapt.qtrim		
+DS0097_023	hfilt.dedup.deadapt.qtrim		
+DS0097_024	hfilt.dedup.deadapt.qtrim		
+DS0097_025	hfilt.dedup.deadapt.qtrim		
+DS0097_026	hfilt.dedup.deadapt.qtrim		
+DS0097_027	hfilt.dedup.deadapt.qtrim		
+DS0097_028	hfilt.dedup.deadapt.qtrim		
+DS0097_029	hfilt.dedup.deadapt.qtrim		
+DS0097_030	hfilt.dedup.deadapt.qtrim		
+DS0097_031	hfilt.dedup.deadapt.qtrim		
+DS0097_032	hfilt.dedup.deadapt.qtrim		
+DS0097_034	hfilt.dedup.deadapt.qtrim		
+DS0097_035	hfilt.dedup.deadapt.qtrim		
+DS0097_036	hfilt.dedup.deadapt.qtrim		
+DS0485_002	hfilt.dedup.deadapt.qtrim		
+SS01000	hfilt.dedup.deadapt.qtrim		
+SS01001	hfilt.dedup.deadapt.qtrim		
+SS01002	hfilt.dedup.deadapt.qtrim		
+SS01004	hfilt.dedup.deadapt.qtrim		
+SS01005	hfilt.dedup.deadapt.qtrim		
+SS01006	hfilt.dedup.deadapt.qtrim		
+SS01007	hfilt.dedup.deadapt.qtrim		
+SS01008	hfilt.dedup.deadapt.qtrim		
+SS01008b	hfilt.dedup.deadapt.qtrim		
+SS01009	hfilt.dedup.deadapt.qtrim		
+SS01011	hfilt.dedup.deadapt.qtrim		
+SS01012	hfilt.dedup.deadapt.qtrim		
+SS01013	hfilt.dedup.deadapt.qtrim		
+SS01013b	hfilt.dedup.deadapt.qtrim		
+SS01015	hfilt.dedup.deadapt.qtrim		
+SS01016	hfilt.dedup.deadapt.qtrim		
+SS01017	hfilt.dedup.deadapt.qtrim		
+SS01018	hfilt.dedup.deadapt.qtrim		
+SS01019	hfilt.dedup.deadapt.qtrim		
+SS01020b	hfilt.dedup.deadapt.qtrim		
+SS01022	hfilt.dedup.deadapt.qtrim		
+SS01023	hfilt.dedup.deadapt.qtrim		
+SS01026	hfilt.dedup.deadapt.qtrim		
+SS01027	hfilt.dedup.deadapt.qtrim		
+SS01030	hfilt.dedup.deadapt.qtrim		
+SS01032b	hfilt.dedup.deadapt.qtrim		
+SS01033	hfilt.dedup.deadapt.qtrim		
+SS01034b	hfilt.dedup.deadapt.qtrim		
+SS01036	hfilt.dedup.deadapt.qtrim		
+SS01037	hfilt.dedup.deadapt.qtrim		
+SS01038	hfilt.dedup.deadapt.qtrim		
+SS01039b	hfilt.dedup.deadapt.qtrim		
+SS01042	hfilt.dedup.deadapt.qtrim		
+SS01043b	hfilt.dedup.deadapt.qtrim		
+SS01046b	hfilt.dedup.deadapt.qtrim		
+SS01047	hfilt.dedup.deadapt.qtrim		
+SS01048	hfilt.dedup.deadapt.qtrim		
+SS01052	hfilt.dedup.deadapt.qtrim		
+SS01053	hfilt.dedup.deadapt.qtrim		
+SS01054	hfilt.dedup.deadapt.qtrim		
+SS01055	hfilt.dedup.deadapt.qtrim		
+SS01056	hfilt.dedup.deadapt.qtrim		
+SS01057	hfilt.dedup.deadapt.qtrim		
+SS01059	hfilt.dedup.deadapt.qtrim		
+SS01060	hfilt.dedup.deadapt.qtrim		
+SS01062b	hfilt.dedup.deadapt.qtrim		
+SS01063	hfilt.dedup.deadapt.qtrim		
+SS01066	hfilt.dedup.deadapt.qtrim		
+SS01067	hfilt.dedup.deadapt.qtrim		
+SS01068	hfilt.dedup.deadapt.qtrim		
+SS01069	hfilt.dedup.deadapt.qtrim		
+SS01070	hfilt.dedup.deadapt.qtrim		
+SS01072	hfilt.dedup.deadapt.qtrim		
+SS01073	hfilt.dedup.deadapt.qtrim		
+SS01075	hfilt.dedup.deadapt.qtrim		
+SS01076	hfilt.dedup.deadapt.qtrim		
+SS01078	hfilt.dedup.deadapt.qtrim		
+SS01080	hfilt.dedup.deadapt.qtrim		
+SS01081	hfilt.dedup.deadapt.qtrim		
+SS01083	hfilt.dedup.deadapt.qtrim		
+SS01084	hfilt.dedup.deadapt.qtrim		
+SS01086	hfilt.dedup.deadapt.qtrim		
+SS01087	hfilt.dedup.deadapt.qtrim		
+SS01088	hfilt.dedup.deadapt.qtrim		
+SS01089	hfilt.dedup.deadapt.qtrim		
+SS01090	hfilt.dedup.deadapt.qtrim		
+SS01091	hfilt.dedup.deadapt.qtrim		
+SS01092	hfilt.dedup.deadapt.qtrim		
+SS01093b	hfilt.dedup.deadapt.qtrim		
+SS01093c	hfilt.dedup.deadapt.qtrim		
+SS01094	hfilt.dedup.deadapt.qtrim		
+SS01097	hfilt.dedup.deadapt.qtrim		
+SS01098	hfilt.dedup.deadapt.qtrim		
+SS01100	hfilt.dedup.deadapt.qtrim		
+SS01103	hfilt.dedup.deadapt.qtrim		
+SS01105	hfilt.dedup.deadapt.qtrim		
+SS01108	hfilt.dedup.deadapt.qtrim		
+SS01109	hfilt.dedup.deadapt.qtrim		
+SS01117	hfilt.dedup.deadapt.qtrim		
+SS01117b	hfilt.dedup.deadapt.qtrim		
+SS01119	hfilt.dedup.deadapt.qtrim		
+SS01120	hfilt.dedup.deadapt.qtrim		
+SS01120b	hfilt.dedup.deadapt.qtrim		
+SS01123	hfilt.dedup.deadapt.qtrim		
+SS01124	hfilt.dedup.deadapt.qtrim		
+SS01125	hfilt.dedup.deadapt.qtrim		
+SS01126	hfilt.dedup.deadapt.qtrim		
+SS01126b	hfilt.dedup.deadapt.qtrim		
+SS01127	hfilt.dedup.deadapt.qtrim		
+SS01128	hfilt.dedup.deadapt.qtrim		
+SS01130	hfilt.dedup.deadapt.qtrim		
+SS01131	hfilt.dedup.deadapt.qtrim		
+SS01132	hfilt.dedup.deadapt.qtrim		
+SS01133	hfilt.dedup.deadapt.qtrim		
+SS01134	hfilt.dedup.deadapt.qtrim		
+SS01135	hfilt.dedup.deadapt.qtrim		
+SS01136	hfilt.dedup.deadapt.qtrim		
+SS01137	hfilt.dedup.deadapt.qtrim		
+SS01138	hfilt.dedup.deadapt.qtrim		
+SS01139	hfilt.dedup.deadapt.qtrim		
+SS01140	hfilt.dedup.deadapt.qtrim		
+SS01141	hfilt.dedup.deadapt.qtrim		
+SS01142	hfilt.dedup.deadapt.qtrim		
+SS01145	hfilt.dedup.deadapt.qtrim		
+SS01146	hfilt.dedup.deadapt.qtrim		
+SS01147	hfilt.dedup.deadapt.qtrim		
+SS01148	hfilt.dedup.deadapt.qtrim		
+SS01149	hfilt.dedup.deadapt.qtrim		
+SS01150	hfilt.dedup.deadapt.qtrim		
+SS01151	hfilt.dedup.deadapt.qtrim		
+SS01153	hfilt.dedup.deadapt.qtrim		
+SS01154	hfilt.dedup.deadapt.qtrim		
+SS01155	hfilt.dedup.deadapt.qtrim		
+SS01156	hfilt.dedup.deadapt.qtrim		
+SS01157	hfilt.dedup.deadapt.qtrim		
+SS01158	hfilt.dedup.deadapt.qtrim		
+SS01160	hfilt.dedup.deadapt.qtrim		
+SS01161	hfilt.dedup.deadapt.qtrim		
+SS01162	hfilt.dedup.deadapt.qtrim		
+SS01163	hfilt.dedup.deadapt.qtrim		
+SS01164	hfilt.dedup.deadapt.qtrim		
+SS01165	hfilt.dedup.deadapt.qtrim		
+SS01166	hfilt.dedup.deadapt.qtrim		
+SS01167	hfilt.dedup.deadapt.qtrim		
+SS01168	hfilt.dedup.deadapt.qtrim		
+SS01169	hfilt.dedup.deadapt.qtrim		
+SS01170	hfilt.dedup.deadapt.qtrim		
+SS01171	hfilt.dedup.deadapt.qtrim		
+SS01172	hfilt.dedup.deadapt.qtrim		
+SS01173	hfilt.dedup.deadapt.qtrim		
+SS01175	hfilt.dedup.deadapt.qtrim		
+SS01176	hfilt.dedup.deadapt.qtrim		
+SS01177	hfilt.dedup.deadapt.qtrim		
+SS01179	hfilt.dedup.deadapt.qtrim		
+SS01180	hfilt.dedup.deadapt.qtrim		
+SS01181	hfilt.dedup.deadapt.qtrim		
+SS01182	hfilt.dedup.deadapt.qtrim		
+SS01183	hfilt.dedup.deadapt.qtrim		
+SS01184	hfilt.dedup.deadapt.qtrim		
+SS01185	hfilt.dedup.deadapt.qtrim		
+SS01185b	hfilt.dedup.deadapt.qtrim		
+SS01188	hfilt.dedup.deadapt.qtrim		
+SS01191	hfilt.dedup.deadapt.qtrim		
+SS01194	hfilt.dedup.deadapt.qtrim		
+SS01195	hfilt.dedup.deadapt.qtrim		
+SS01197	hfilt.dedup.deadapt.qtrim		
+SS01198	hfilt.dedup.deadapt.qtrim		
+SS01199	hfilt.dedup.deadapt.qtrim		
+SS01200	hfilt.dedup.deadapt.qtrim		
+SS01201	hfilt.dedup.deadapt.qtrim		
+SS01203	hfilt.dedup.deadapt.qtrim		
+SS01204	hfilt.dedup.deadapt.qtrim		
+SS01205	hfilt.dedup.deadapt.qtrim		
+SS01206	hfilt.dedup.deadapt.qtrim		
+SS01207	hfilt.dedup.deadapt.qtrim		
+SS01208	hfilt.dedup.deadapt.qtrim		
+SS01210	hfilt.dedup.deadapt.qtrim		
+SS01211	hfilt.dedup.deadapt.qtrim		
+SS01212	hfilt.dedup.deadapt.qtrim		
+SS01213	hfilt.dedup.deadapt.qtrim		
+SS01214	hfilt.dedup.deadapt.qtrim		
+SS01216	hfilt.dedup.deadapt.qtrim		
+SS01217	hfilt.dedup.deadapt.qtrim		
+SS01218	hfilt.dedup.deadapt.qtrim		
+SS01219	hfilt.dedup.deadapt.qtrim		
+SS01220	hfilt.dedup.deadapt.qtrim		
+SS01221	hfilt.dedup.deadapt.qtrim		
+SS01222	hfilt.dedup.deadapt.qtrim		
+SS01223	hfilt.dedup.deadapt.qtrim		
+SS01224	hfilt.dedup.deadapt.qtrim		
+SS01225	hfilt.dedup.deadapt.qtrim		
+SS01226	hfilt.dedup.deadapt.qtrim		
+SS01227	hfilt.dedup.deadapt.qtrim		
+SS01228	hfilt.dedup.deadapt.qtrim		
+SS01229	hfilt.dedup.deadapt.qtrim		
+SS01230	hfilt.dedup.deadapt.qtrim		
+SS01231	hfilt.dedup.deadapt.qtrim		
+SS01232	hfilt.dedup.deadapt.qtrim		
+SS01234	hfilt.dedup.deadapt.qtrim		
+SS01236	hfilt.dedup.deadapt.qtrim		
+SS01239	hfilt.dedup.deadapt.qtrim		
+SS01240	hfilt.dedup.deadapt.qtrim		
+SS01241	hfilt.dedup.deadapt.qtrim		
+SS01242	hfilt.dedup.deadapt.qtrim		
+SS01247	hfilt.dedup.deadapt.qtrim		
+SS01248	hfilt.dedup.deadapt.qtrim		
+SS01252	hfilt.dedup.deadapt.qtrim		
+SS01255	hfilt.dedup.deadapt.qtrim		
+SS01260	hfilt.dedup.deadapt.qtrim		
+xjin_AB_P0R1a	dedup.deadapt.qtrim		
+xjin_AB_P0R1b	dedup.deadapt.qtrim		
+xjin_AB_P0R1c	dedup.deadapt.qtrim		
+xjin_AB_P0R2a	dedup.deadapt.qtrim		
+xjin_AB_P0R2b	dedup.deadapt.qtrim		
+xjin_AB_P0R2c	dedup.deadapt.qtrim		
+xjin_AB_P0R3a	dedup.deadapt.qtrim		
+xjin_AB_P0R3b	dedup.deadapt.qtrim		
+xjin_AB_P0R3c	dedup.deadapt.qtrim		
+xjin_AB_P1R1a	dedup.deadapt.qtrim		
+xjin_AB_P1R1b	dedup.deadapt.qtrim		
+xjin_AB_P1R1c	dedup.deadapt.qtrim		
+xjin_AB_P1R2a	dedup.deadapt.qtrim		
+xjin_AB_P1R2b	dedup.deadapt.qtrim		
+xjin_AB_P1R2c	dedup.deadapt.qtrim		
+xjin_AB_P1R3a	dedup.deadapt.qtrim		
+xjin_AB_P1R3b	dedup.deadapt.qtrim		
+xjin_AB_P1R3c	dedup.deadapt.qtrim		
+xjin_AB_P2R1a	dedup.deadapt.qtrim		
+xjin_AB_P2R1b	dedup.deadapt.qtrim		
+xjin_AB_P2R1c	dedup.deadapt.qtrim		
+xjin_AB_P2R2a	dedup.deadapt.qtrim		
+xjin_AB_P2R2b	dedup.deadapt.qtrim		
+xjin_AB_P2R2c	dedup.deadapt.qtrim		
+xjin_AB_P2R3a	dedup.deadapt.qtrim		
+xjin_AB_P2R3b	dedup.deadapt.qtrim		
+xjin_AB_P2R3c	dedup.deadapt.qtrim		
+xjin_AB_P3R1a	dedup.deadapt.qtrim		
+xjin_AB_P3R1b	dedup.deadapt.qtrim		
+xjin_AB_P3R1c	dedup.deadapt.qtrim		
+xjin_AB_P3R2a	dedup.deadapt.qtrim		
+xjin_AB_P3R2b	dedup.deadapt.qtrim		
+xjin_AB_P3R2c	dedup.deadapt.qtrim		
+xjin_AB_P3R3a	dedup.deadapt.qtrim		
+xjin_AB_P3R3b	dedup.deadapt.qtrim		
+xjin_AB_P3R3c	dedup.deadapt.qtrim		
+xjin_AB_P4R1a	dedup.deadapt.qtrim		
+xjin_AB_P4R1b	dedup.deadapt.qtrim		
+xjin_AB_P4R1c	dedup.deadapt.qtrim		
+xjin_AB_P4R2a	dedup.deadapt.qtrim		
+xjin_AB_P4R2b	dedup.deadapt.qtrim		
+xjin_AB_P4R2c	dedup.deadapt.qtrim		
+xjin_AB_P4R3a	dedup.deadapt.qtrim		
+xjin_AB_P4R3b	dedup.deadapt.qtrim		
+xjin_AB_P4R3c	dedup.deadapt.qtrim		
+xjin_AB_P5R1a	dedup.deadapt.qtrim		
+xjin_AB_P5R1b	dedup.deadapt.qtrim		
+xjin_AB_P5R1c	dedup.deadapt.qtrim		
+xjin_AB_P5R2a	dedup.deadapt.qtrim		
+xjin_AB_P5R2b	dedup.deadapt.qtrim		
+xjin_AB_P5R2c	dedup.deadapt.qtrim		
+xjin_AB_P5R3a	dedup.deadapt.qtrim		
+xjin_AB_P5R3b	dedup.deadapt.qtrim		
+xjin_AB_P5R3c	dedup.deadapt.qtrim		
+xjin_AS_P0R1a	dedup.deadapt.qtrim		
+xjin_AS_P0R1b	dedup.deadapt.qtrim		
+xjin_AS_P0R1c	dedup.deadapt.qtrim		
+xjin_AS_P0R2a	dedup.deadapt.qtrim		
+xjin_AS_P0R2b	dedup.deadapt.qtrim		
+xjin_AS_P0R2c	dedup.deadapt.qtrim		
+xjin_AS_P0R3a	dedup.deadapt.qtrim		
+xjin_AS_P0R3b	dedup.deadapt.qtrim		
+xjin_AS_P0R3c	dedup.deadapt.qtrim		
+xjin_AS_P1R1a	dedup.deadapt.qtrim		
+xjin_AS_P1R1b	dedup.deadapt.qtrim		
+xjin_AS_P1R1c	dedup.deadapt.qtrim		
+xjin_AS_P1R2a	dedup.deadapt.qtrim		
+xjin_AS_P1R2b	dedup.deadapt.qtrim		
+xjin_AS_P1R2c	dedup.deadapt.qtrim		
+xjin_AS_P1R3a	dedup.deadapt.qtrim		
+xjin_AS_P1R3b	dedup.deadapt.qtrim		
+xjin_AS_P1R3c	dedup.deadapt.qtrim		
+xjin_AS_P2R1a	dedup.deadapt.qtrim		
+xjin_AS_P2R1b	dedup.deadapt.qtrim		
+xjin_AS_P2R1c	dedup.deadapt.qtrim		
+xjin_AS_P2R2a	dedup.deadapt.qtrim		
+xjin_AS_P2R2b	dedup.deadapt.qtrim		
+xjin_AS_P2R2c	dedup.deadapt.qtrim		
+xjin_AS_P2R3a	dedup.deadapt.qtrim		
+xjin_AS_P2R3b	dedup.deadapt.qtrim		
+xjin_AS_P2R3c	dedup.deadapt.qtrim		
+xjin_AS_P3R1a	dedup.deadapt.qtrim		
+xjin_AS_P3R1b	dedup.deadapt.qtrim		
+xjin_AS_P3R1c	dedup.deadapt.qtrim		
+xjin_AS_P3R2a	dedup.deadapt.qtrim		
+xjin_AS_P3R2b	dedup.deadapt.qtrim		
+xjin_AS_P3R2c	dedup.deadapt.qtrim		
+xjin_AS_P3R3a	dedup.deadapt.qtrim		
+xjin_AS_P3R3b	dedup.deadapt.qtrim		
+xjin_AS_P3R3c	dedup.deadapt.qtrim		
+xjin_AS_P4R1a	dedup.deadapt.qtrim		
+xjin_AS_P4R1b	dedup.deadapt.qtrim		
+xjin_AS_P4R1c	dedup.deadapt.qtrim		
+xjin_AS_P4R2a	dedup.deadapt.qtrim		
+xjin_AS_P4R2b	dedup.deadapt.qtrim		
+xjin_AS_P4R2c	dedup.deadapt.qtrim		
+xjin_AS_P4R3a	dedup.deadapt.qtrim		
+xjin_AS_P4R3b	dedup.deadapt.qtrim		
+xjin_AS_P4R3c	dedup.deadapt.qtrim		
+xjin_AS_P5R1a	dedup.deadapt.qtrim		
+xjin_AS_P5R1b	dedup.deadapt.qtrim		
+xjin_AS_P5R1c	dedup.deadapt.qtrim		
+xjin_AS_P5R2a	dedup.deadapt.qtrim		
+xjin_AS_P5R2b	dedup.deadapt.qtrim		
+xjin_AS_P5R2c	dedup.deadapt.qtrim		
+xjin_AS_P5R3a	dedup.deadapt.qtrim		
+xjin_AS_P5R3b	dedup.deadapt.qtrim		
+xjin_AS_P5R3c	dedup.deadapt.qtrim		
+xjin_Flex_Innoculum_Rep1	dedup.deadapt.qtrim		
+xjin_Flex_Innoculum_Rep2	dedup.deadapt.qtrim		
+xjin_KAPA_Innoculum_Rep1	dedup.deadapt.qtrim		
+xjin_KAPA_Innoculum_Rep2	dedup.deadapt.qtrim		
+xjin_MB_P0R1a	dedup.deadapt.qtrim		
+xjin_MB_P0R1b	dedup.deadapt.qtrim		
+xjin_MB_P0R1c	dedup.deadapt.qtrim		
+xjin_MB_P0R2a	dedup.deadapt.qtrim		
+xjin_MB_P0R2b	dedup.deadapt.qtrim		
+xjin_MB_P0R2c	dedup.deadapt.qtrim		
+xjin_MB_P0R3a	dedup.deadapt.qtrim		
+xjin_MB_P0R3b	dedup.deadapt.qtrim		
+xjin_MB_P0R3c	dedup.deadapt.qtrim		
+xjin_MB_P1R1a	dedup.deadapt.qtrim		
+xjin_MB_P1R1b	dedup.deadapt.qtrim		
+xjin_MB_P1R1c	dedup.deadapt.qtrim		
+xjin_MB_P1R2a	dedup.deadapt.qtrim		
+xjin_MB_P1R2b	dedup.deadapt.qtrim		
+xjin_MB_P1R2c	dedup.deadapt.qtrim		
+xjin_MB_P1R3a	dedup.deadapt.qtrim		
+xjin_MB_P1R3b	dedup.deadapt.qtrim		
+xjin_MB_P1R3c	dedup.deadapt.qtrim		
+xjin_MB_P2R1a	dedup.deadapt.qtrim		
+xjin_MB_P2R1b	dedup.deadapt.qtrim		
+xjin_MB_P2R1c	dedup.deadapt.qtrim		
+xjin_MB_P2R2a	dedup.deadapt.qtrim		
+xjin_MB_P2R2b	dedup.deadapt.qtrim		
+xjin_MB_P2R2c	dedup.deadapt.qtrim		
+xjin_MB_P2R3a	dedup.deadapt.qtrim		
+xjin_MB_P2R3b	dedup.deadapt.qtrim		
+xjin_MB_P2R3c	dedup.deadapt.qtrim		
+xjin_MB_P3R1a	dedup.deadapt.qtrim		
+xjin_MB_P3R1b	dedup.deadapt.qtrim		
+xjin_MB_P3R1c	dedup.deadapt.qtrim		
+xjin_MB_P3R2a	dedup.deadapt.qtrim		
+xjin_MB_P3R2b	dedup.deadapt.qtrim		
+xjin_MB_P3R2c	dedup.deadapt.qtrim		
+xjin_MB_P3R3a	dedup.deadapt.qtrim		
+xjin_MB_P3R3b	dedup.deadapt.qtrim		
+xjin_MB_P3R3c	dedup.deadapt.qtrim		
+xjin_MB_P4R1a	dedup.deadapt.qtrim		
+xjin_MB_P4R1b	dedup.deadapt.qtrim		
+xjin_MB_P4R1c	dedup.deadapt.qtrim		
+xjin_MB_P4R2a	dedup.deadapt.qtrim		
+xjin_MB_P4R2b	dedup.deadapt.qtrim		
+xjin_MB_P4R2c	dedup.deadapt.qtrim		
+xjin_MB_P4R3a	dedup.deadapt.qtrim		
+xjin_MB_P4R3b	dedup.deadapt.qtrim		
+xjin_MB_P4R3c	dedup.deadapt.qtrim		
+xjin_MB_P5R1a	dedup.deadapt.qtrim		
+xjin_MB_P5R1b	dedup.deadapt.qtrim		
+xjin_MB_P5R1c	dedup.deadapt.qtrim		
+xjin_MB_P5R2a	dedup.deadapt.qtrim		
+xjin_MB_P5R2b	dedup.deadapt.qtrim		
+xjin_MB_P5R2c	dedup.deadapt.qtrim		
+xjin_MB_P5R3a	dedup.deadapt.qtrim		
+xjin_MB_P5R3b	dedup.deadapt.qtrim		
+xjin_MB_P5R3c	dedup.deadapt.qtrim		
+xjin_MS_P0R1a	dedup.deadapt.qtrim		
+xjin_MS_P0R1b	dedup.deadapt.qtrim		
+xjin_MS_P0R1c	dedup.deadapt.qtrim		
+xjin_MS_P0R2a	dedup.deadapt.qtrim		
+xjin_MS_P0R2b	dedup.deadapt.qtrim		
+xjin_MS_P0R2c	dedup.deadapt.qtrim		
+xjin_MS_P0R3a	dedup.deadapt.qtrim		
+xjin_MS_P0R3b	dedup.deadapt.qtrim		
+xjin_MS_P0R3c	dedup.deadapt.qtrim		
+xjin_MS_P1R1a	dedup.deadapt.qtrim		
+xjin_MS_P1R1b	dedup.deadapt.qtrim		
+xjin_MS_P1R1c	dedup.deadapt.qtrim		
+xjin_MS_P1R2a	dedup.deadapt.qtrim		
+xjin_MS_P1R2b	dedup.deadapt.qtrim		
+xjin_MS_P1R2c	dedup.deadapt.qtrim		
+xjin_MS_P1R3a	dedup.deadapt.qtrim		
+xjin_MS_P1R3b	dedup.deadapt.qtrim		
+xjin_MS_P1R3c	dedup.deadapt.qtrim		
+xjin_MS_P2R1a	dedup.deadapt.qtrim		
+xjin_MS_P2R1b	dedup.deadapt.qtrim		
+xjin_MS_P2R1c	dedup.deadapt.qtrim		
+xjin_MS_P2R2a	dedup.deadapt.qtrim		
+xjin_MS_P2R2b	dedup.deadapt.qtrim		
+xjin_MS_P2R2c	dedup.deadapt.qtrim		
+xjin_MS_P2R3a	dedup.deadapt.qtrim		
+xjin_MS_P2R3b	dedup.deadapt.qtrim		
+xjin_MS_P2R3c	dedup.deadapt.qtrim		
+xjin_MS_P3R1a	dedup.deadapt.qtrim		
+xjin_MS_P3R1b	dedup.deadapt.qtrim		
+xjin_MS_P3R1c	dedup.deadapt.qtrim		
+xjin_MS_P3R2a	dedup.deadapt.qtrim		
+xjin_MS_P3R2b	dedup.deadapt.qtrim		
+xjin_MS_P3R2c	dedup.deadapt.qtrim		
+xjin_MS_P3R3a	dedup.deadapt.qtrim		
+xjin_MS_P3R3b	dedup.deadapt.qtrim		
+xjin_MS_P3R3c	dedup.deadapt.qtrim		
+xjin_MS_P4R1a	dedup.deadapt.qtrim		
+xjin_MS_P4R1b	dedup.deadapt.qtrim		
+xjin_MS_P4R1c	dedup.deadapt.qtrim		
+xjin_MS_P4R2a	dedup.deadapt.qtrim		
+xjin_MS_P4R2b	dedup.deadapt.qtrim		
+xjin_MS_P4R2c	dedup.deadapt.qtrim		
+xjin_MS_P4R3a	dedup.deadapt.qtrim		
+xjin_MS_P4R3b	dedup.deadapt.qtrim		
+xjin_MS_P4R3c	dedup.deadapt.qtrim		
+xjin_MS_P5R1a	dedup.deadapt.qtrim		
+xjin_MS_P5R1b	dedup.deadapt.qtrim		
+xjin_MS_P5R1c	dedup.deadapt.qtrim		
+xjin_MS_P5R2a	dedup.deadapt.qtrim		
+xjin_MS_P5R2b	dedup.deadapt.qtrim		
+xjin_MS_P5R2c	dedup.deadapt.qtrim		
+xjin_MS_P5R3a	dedup.deadapt.qtrim		
+xjin_MS_P5R3b	dedup.deadapt.qtrim		
+xjin_MS_P5R3c	dedup.deadapt.qtrim		
+xjin_N_P0R1a	dedup.deadapt.qtrim		
+xjin_N_P0R1b	dedup.deadapt.qtrim		
+xjin_N_P0R1c	dedup.deadapt.qtrim		
+xjin_N_P0R2a	dedup.deadapt.qtrim		
+xjin_N_P0R2b	dedup.deadapt.qtrim		
+xjin_N_P0R2c	dedup.deadapt.qtrim		
+xjin_N_P0R3a	dedup.deadapt.qtrim		
+xjin_N_P0R3b	dedup.deadapt.qtrim		
+xjin_N_P0R3c	dedup.deadapt.qtrim		
+xjin_N_P1R1a	dedup.deadapt.qtrim		
+xjin_N_P1R1b	dedup.deadapt.qtrim		
+xjin_N_P1R1c	dedup.deadapt.qtrim		
+xjin_N_P1R2a	dedup.deadapt.qtrim		
+xjin_N_P1R2b	dedup.deadapt.qtrim		
+xjin_N_P1R2c	dedup.deadapt.qtrim		
+xjin_N_P1R3a	dedup.deadapt.qtrim		
+xjin_N_P1R3b	dedup.deadapt.qtrim		
+xjin_N_P1R3c	dedup.deadapt.qtrim		
+xjin_N_P2R1a	dedup.deadapt.qtrim		
+xjin_N_P2R1b	dedup.deadapt.qtrim		
+xjin_N_P2R1c	dedup.deadapt.qtrim		
+xjin_N_P2R2a	dedup.deadapt.qtrim		
+xjin_N_P2R2b	dedup.deadapt.qtrim		
+xjin_N_P2R2c	dedup.deadapt.qtrim		
+xjin_N_P2R3a	dedup.deadapt.qtrim		
+xjin_N_P2R3b	dedup.deadapt.qtrim		
+xjin_N_P2R3c	dedup.deadapt.qtrim		
+xjin_N_P3R1a	dedup.deadapt.qtrim		
+xjin_N_P3R1b	dedup.deadapt.qtrim		
+xjin_N_P3R1c	dedup.deadapt.qtrim		
+xjin_N_P3R2a	dedup.deadapt.qtrim		
+xjin_N_P3R2b	dedup.deadapt.qtrim		
+xjin_N_P3R2c	dedup.deadapt.qtrim		
+xjin_N_P3R3a	dedup.deadapt.qtrim		
+xjin_N_P3R3b	dedup.deadapt.qtrim		
+xjin_N_P3R3c	dedup.deadapt.qtrim		
+xjin_N_P4R1a	dedup.deadapt.qtrim		
+xjin_N_P4R1b	dedup.deadapt.qtrim		
+xjin_N_P4R1c	dedup.deadapt.qtrim		
+xjin_N_P4R2a	dedup.deadapt.qtrim		
+xjin_N_P4R2b	dedup.deadapt.qtrim		
+xjin_N_P4R2c	dedup.deadapt.qtrim		
+xjin_N_P4R3a	dedup.deadapt.qtrim		
+xjin_N_P4R3b	dedup.deadapt.qtrim		
+xjin_N_P4R3c	dedup.deadapt.qtrim		
+xjin_N_P5R1a	dedup.deadapt.qtrim		
+xjin_N_P5R1b	dedup.deadapt.qtrim		
+xjin_N_P5R1c	dedup.deadapt.qtrim		
+xjin_N_P5R2a	dedup.deadapt.qtrim		
+xjin_N_P5R2b	dedup.deadapt.qtrim		
+xjin_N_P5R2c	dedup.deadapt.qtrim		
+xjin_N_P5R3a	dedup.deadapt.qtrim		
+xjin_N_P5R3b	dedup.deadapt.qtrim		
+xjin_N_P5R3c	dedup.deadapt.qtrim		
+xjin_XT_Innoculum_Rep1	dedup.deadapt.qtrim		
+xjin_XT_Innoculum_Rep2	dedup.deadapt.qtrim		

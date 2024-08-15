@@ -249,6 +249,177 @@ rule run_kmtricks_merge:
         """
 
 
+rule drop_short_tips_from_ggcat_fasta:
+    output:
+        "{stem}.ggcat-k{ksize}-{unitig_source}.droptips-{length}.fn"
+    wildcard_constraints:
+        length=single_param_wc,
+    input:
+        script="scripts/drop_short_tips_from_ggcat_fasta.py",
+        fasta="{stem}.ggcat-k{ksize}-{unitig_source}.fn",
+    params:
+        length_mult=lambda w: float(w.length),
+        ksize=lambda w: int(w.ksize),
+    conda:
+        'conda/strainzip.yaml'
+    shell:
+        "{input.script} {params.ksize} {params.length_mult} {input.fasta} {output}"
+
+
+rule rerun_ggcat_on_droptips_fasta:
+    output:
+        "{stem}.ggcat-k{ksize}-{unitig_source}-droptips.fn"
+    input:
+        "{stem}.ggcat-k{ksize}-{unitig_source}.droptips-2.fn"
+    container:
+        config["container"]["ggcat"]
+    threads: 48
+    shell:
+        """
+        input_dir=$(mktemp -d) && echo $input_dir
+        ln -s $(realpath {input}) $input_dir/$(basename {input}).fa
+        ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e $input_dir/*
+        rm -r $input_dir
+        """
+
+
+rule run_kmc_on_reads:
+    output:
+        pre="{stemA}/r.{stemB}.kmc-k{ksize}.kmc_pre",
+        suf="{stemA}/r.{stemB}.kmc-k{ksize}.kmc_suf",
+    wildcard_constraints:
+        ksize=integer_wc,
+    input:
+        r1="{stemA}/r1.{stemB}.fq.gz",
+        r2="{stemA}/r2.{stemB}.fq.gz",
+    params:
+        ksize=lambda w: int(w.ksize),
+        dbname="{stemA}/r.{stemB}.kmc-k{ksize}",
+    threads: 1
+    conda:
+        "conda/kmc.yaml"
+    shell:
+        """
+        workdir=$(mktemp -d)
+
+        # Construct input file list.
+        filelist=$(mktemp)
+        for file in {input}
+        do
+            echo $file
+        done > $filelist
+
+        echo $workdir $filelist
+
+        kmc -v -k{params.ksize} -fq -ci1 -cs1000000000 -t{threads} @$filelist {params.dbname} $workdir
+
+        # Cleanup
+        rm -r $filelist $workdir
+        """
+
+rule build_kmc_mask_from_fasta:
+    output:
+        pre="{stem}.kmc-k{ksize}-mask.kmc_pre",
+        suf="{stem}.kmc-k{ksize}-mask.kmc_suf",
+    input:
+        fasta="{stem}.fn",
+    params:
+        ksize=lambda w: int(w.ksize),
+        dbname="{stem}.kmc-k{ksize}-mask",
+    threads: 8
+    conda:
+        "conda/kmc.yaml"
+    shell:
+        """
+        workdir=$(mktemp -d)
+        echo $workdir
+
+        kmc -v -k{params.ksize} -fa -ci1 -cs2 -t{threads} {input.fasta} {params.dbname} $workdir
+
+        # Cleanup
+        rm -r $workdir
+        """
+
+
+rule filter_kmc_counts_by_notips_contigs:
+    output:
+        pre="data/group/{group}/reads/{mgen}/r.{stem}.kmc-k{ksize}-{unitig_source}-droptips.kmc_pre",
+        suf="data/group/{group}/reads/{mgen}/r.{stem}.kmc-k{ksize}-{unitig_source}-droptips.kmc_suf",
+    input:
+        reads_pre="data/reads/{mgen}/r.{stem}.kmc-k{ksize}.kmc_pre",
+        reads_suf="data/reads/{mgen}/r.{stem}.kmc-k{ksize}.kmc_suf",
+        mask_pre="data/group/{group}/r.{stem}.ggcat-k{ksize}-{unitig_source}-droptips.kmc-k{ksize}-mask.kmc_pre",
+        mask_suf="data/group/{group}/r.{stem}.ggcat-k{ksize}-{unitig_source}-droptips.kmc-k{ksize}-mask.kmc_suf",
+    params:
+        reads_dbname="data/reads/{mgen}/r.{stem}.kmc-k{ksize}",
+        mask_dbname="data/group/{group}/r.{stem}.ggcat-k{ksize}-{unitig_source}-droptips.kmc-k{ksize}-mask",
+        out_dbname="data/group/{group}/reads/{mgen}/r.{stem}.kmc-k{ksize}-{unitig_source}-droptips",
+        ksize=lambda w: int(w.ksize),
+    conda:
+        "conda/kmc.yaml"
+    shell:
+        """
+        kmc_tools simple {params.mask_dbname} {params.reads_dbname} intersect {params.out_dbname} -ocright
+        """
+
+
+# NOTE: This output is very large and this rule may be only
+# useful for debugging. In reality, I should only stream the output.
+# e.g. with `<(kmc_tools transform  data/group/{w.group}/reads/{mgen}/r.{w.stem} dump >(cat))`
+rule dump_kmc_counts:
+    output: "{stem}.kcounts.tsv",
+    input:
+        pre="{stem}.kmc_pre",
+        suf="{stem}.kmc_suf",
+    params:
+        dbname="{stem}"
+    conda:
+        "conda/kmc.yaml"
+    shell:
+        "kmc_tools transform {params.dbname} dump -s {output}"
+
+
+
+rule merge_kmc_counts_to_table:
+    output:
+        "data/group/{group}/r.{stem}.kcounts_merged.tsv",
+    input:
+        pre_and_suf=lambda w: [
+            f"data/group/{w.group}/reads/{mgen}/r.{w.stem}.kmc_{pre_or_suf}"
+            for mgen, pre_or_suf in product(
+                config["mgen_group"][w.group], ["pre", "suf"]
+            )
+        ],
+    params:
+        header=lambda w: "kmer\t" + '\t'.join(config['mgen_group'][w.group]),
+        args=lambda w: [
+            f"<(kmc_tools transform  data/group/{w.group}/reads/{mgen}/r.{w.stem} dump >(cat))"
+            for mgen in config["mgen_group"][w.group]
+        ],
+    conda:
+        "conda/kmc.yaml"
+    shell:
+        """
+        echo "{params.header}" > {output}
+        scripts/merge_kmc_counts.py {params.args} | tqdm >> {output}
+        """
+
+rule load_kmc_merged_table_to_sqlite:
+    output:
+        "{stem}.kmc-k{ksize}-{unitig_source}-droptips.db",
+    input:
+        script="scripts/sample_list_to_sqlite_table_script.py",
+        counts="{stem}.kmc-k{ksize}-{unitig_source}-droptips.kcounts_merged.tsv",
+        sample_list="{stem}.kmtricks_input.txt",
+    shell:
+        """
+        tmpdb=$(mktemp) && echo $tmpdb
+        {input.script} {input.sample_list} {wildcards.ksize} | sqlite3 $tmpdb
+        cat {input.counts} | sed '1,1d' | tqdm --unit-scale 1 | sqlite3 -separator '\t' $tmpdb '.import /dev/stdin count_'
+        mv $tmpdb {output}
+        """
+
+
 rule load_kmtricks_output_to_sqlite:
     output:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.db",
@@ -278,7 +449,7 @@ rule run_ggcat_on_kmtricks_kmers:
         ],
     container:
         config["container"]["ggcat"]
-    threads: 36
+    threads: 48
     shell:
         """
         input_dir=$(mktemp -d)
@@ -310,7 +481,7 @@ rule run_ggcat_on_kmtricks_kmers_and_include_xjin_refs:
         ],
     container:
         config["container"]["ggcat"]
-    threads: 36
+    threads: 48
     shell:
         """
         input_dir=$(mktemp -d)
@@ -334,6 +505,40 @@ rule run_ggcat_on_kmtricks_kmers_and_include_xjin_refs:
         """
 
 
+rule run_ggcat_on_kmtricks_kmers_and_include_megahit_contigs:
+    output:
+        "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-withmegahit.fn",
+    input:
+        counts=lambda w: [
+            f"{w.stem}.kmtricks-k{w.ksize}-m{w.mincount}-r{w.recurrence}.d/matrices/matrix_{part}.count.txt"
+            for part in range(32)
+        ],
+        contigs="{stem}.megahit-full-k{ksize}.fn",
+    container:
+        config["container"]["ggcat"]
+    threads: 48
+    shell:
+        """
+        input_dir=$(mktemp -d)
+        echo $input_dir
+
+        # MEGAHIT contigs
+        ln -rs {input.contigs} $input_dir/$(basename {input.contigs}).fa
+
+        # Kmtricks counts
+        for file in {input.counts}
+        do
+            fasta=$input_dir/$(basename $file).fifo.fa
+            echo making fifo $fasta
+            mkfifo $fasta
+            awk -v OFS="\\n" '{{print ">"NR,$1}}' $file > $fasta &
+        done
+        sleep 2
+        ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e $input_dir/*
+        rm -r $input_dir
+        """
+
+
 rule run_ggcat_on_xjin_refs:
     output:
         "data/xjin_ref.ggcat-k{ksize}-refonly.fn",
@@ -343,7 +548,7 @@ rule run_ggcat_on_xjin_refs:
         ],
     container:
         config["container"]["ggcat"]
-    threads: 36
+    threads: 48
     shell:
         """
         input_dir=$(mktemp -d)
@@ -359,7 +564,87 @@ rule run_ggcat_on_xjin_refs:
         """
 
 
-rule calculate_mean_unitig_depths_across_samples:
+rule run_ggcat_on_reads:
+    output:
+        "data/group/{group}/r.{stem}.ggcat-k{ksize}-denovo.fn",
+    input:
+        r1=lambda w: [
+            f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        r2=lambda w: [
+            f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+    container:
+        config["container"]["ggcat"]
+    threads: 48
+    shell:
+        """
+        ggcat build -s 2 -j {threads} -o {output} -k {wildcards.ksize} -e {input.r1} {input.r2}
+        """
+
+rule run_ggcat_on_reads_and_include_megahit_contigs:
+    output:
+        "data/group/{group}/r.{stem}.ggcat-k{ksize}-withmegahit.fn",
+    input:
+        r1=lambda w: [
+            f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        r2=lambda w: [
+            f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        contigs="data/group/{group}/r.{stem}.megahit-full-k{ksize}.fn",
+    container:
+        config["container"]["ggcat"]
+    threads: 48
+    shell:
+        """
+        input_dir=$(mktemp -d)
+        echo $input_dir
+
+        # MEGAHIT contigs
+        ln -rs {input.contigs} $input_dir/megahit_contigs.fa
+
+        ggcat build -s 2 -j {threads} -o {output} -k {wildcards.ksize} -e $input_dir/megahit_contigs.fa {input.r1} {input.r2}
+
+        rm -r $input_dir
+        """
+
+rule run_ggcat_on_reads_and_include_megahit_contigs_twice:
+    output:
+        "data/group/{group}/r.{stem}.ggcat-k{ksize}-withmegahit2.fn",
+    input:
+        r1=lambda w: [
+            f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        r2=lambda w: [
+            f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        contigs="data/group/{group}/r.{stem}.megahit-full-k{ksize}.fn",
+    container:
+        config["container"]["ggcat"]
+    threads: 48
+    shell:
+        """
+        input_dir=$(mktemp -d)
+        echo $input_dir
+
+        # MEGAHIT contigs
+        ln -rs {input.contigs} $input_dir/megahit_contigs1.fa
+        ln -rs {input.contigs} $input_dir/megahit_contigs2.fa
+
+        ggcat build -s 2 -j {threads} -o {output} -k {wildcards.ksize} -e $input_dir/* {input.r1} {input.r2}
+
+        rm -r $input_dir
+        """
+
+
+rule calculate_mean_unitig_depths_across_samples_from_kmtricks:
     output:
         "data/group/{group}/{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-{unitig_source}.unitig_depth.nc",
     wildcard_constraints:
@@ -371,7 +656,7 @@ rule calculate_mean_unitig_depths_across_samples:
         "conda/strainzip.yaml"
     params:
         sample_list=lambda w: ",".join(config["mgen_group"][w.group]),
-    threads: 36
+    threads: 48
     shell:
         """
         tmpdb=$(mktemp) && echo $tmpdb
@@ -379,8 +664,103 @@ rule calculate_mean_unitig_depths_across_samples:
         rm $tmpdb
         """
 
+# rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips:
+#     output:
+#         "data/group/{group}/{stem}.ggcat-k{ksize}-{unitig_source}-droptips.unitig_depth.nc",
+#     wildcard_constraints:
+#         unitig_source=noperiod_wc,
+#     input:
+#         fasta="data/group/{group}/{stem}.ggcat-k{ksize}-{unitig_source}-droptips.fn",
+#         db="data/group/{group}/{stem}.kmc-k{ksize}-{unitig_source}-droptips.db",
+#     conda:
+#         "conda/strainzip.yaml"
+#     params:
+#         sample_list=lambda w: ",".join(config["mgen_group"][w.group]),
+#     threads: 48
+#     shell:
+#         """
+#         tmpdb=$(mktemp) && echo $tmpdb
+#         strainzip depth --verbose --preload --tmpdb $tmpdb -p {threads} {input.fasta} {input.db} {wildcards.ksize} {params.sample_list} {output}
+#         rm $tmpdb
+#         """
 
-rule load_ggcat_with_depths_to_sz:
+
+rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips_one_step:
+    output:
+        "data/group/{group}/{stem}.ggcat-k{ksize}-{unitig_source}.unitig_depth.nc",
+    wildcard_constraints:
+        ksize=integer_wc,
+    input:
+        merge_script="scripts/merge_kmc_counts.py",
+        mean_script="scripts/mean_unitig_kmer_depth.py",
+        fasta="data/group/{group}/{stem}.ggcat-k{ksize}-{unitig_source}.fn",
+        pre_and_suf=lambda w: [
+            f"data/group/{w.group}/reads/{mgen}/{w.stem}.kmc-k{w.ksize}-{w.unitig_source}.kmc_{pre_or_suf}"
+            for mgen, pre_or_suf in product(
+                config["mgen_group"][w.group], ["pre", "suf"]
+            )
+        ],
+    params:
+        ksize=lambda w: int(w.ksize),
+        sample_names=lambda w: ','.join(config["mgen_group"][w.group]),
+        args=lambda w: [
+            f"<(kmc_tools transform  data/group/{w.group}/reads/{mgen}/{w.stem}.kmc-k{w.ksize}-{w.unitig_source} dump >(cat))"
+            for mgen in config["mgen_group"][w.group]
+        ],
+    conda:
+        "conda/strainzip_kmc.yaml"
+    shell:
+        """
+        {input.merge_script} {params.args} \
+                | {input.mean_script} {params.ksize} {params.sample_names} {input.fasta} {output}
+        """
+
+
+# rule load_ggcat_without_depths_to_sz:
+#     output:
+#         "{stem}.ggcat-k{ksize}-{unitig_source}.nodepth.sz",
+#     wildcard_constraints:
+#         unitig_source=single_param_wc,
+#     input:
+#         fasta="{stem}.ggcat-k{ksize}-{unitig_source}.fn",
+#     conda:
+#         "conda/strainzip.yaml"
+#     shell:
+#         """
+#         strainzip load --verbose {wildcards.ksize} {input.fasta} {output}
+#         """
+
+rule load_ggcat_with_droptips_kmc_depths_to_sz:
+    output:
+        "{stem}.ggcat-k{ksize}-{unitig_source}-droptips.sz",
+    wildcard_constraints:
+        unitig_source=single_param_wc,
+        ksize=integer_wc,
+    input:
+        fasta="{stem}.ggcat-k{ksize}-{unitig_source}-droptips.fn",
+        depth="{stem}.ggcat-k{ksize}-{unitig_source}-droptips.unitig_depth.nc",
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        """
+        strainzip load --verbose {wildcards.ksize} --depth {input.depth} {input.fasta} {output}
+        """
+
+
+# # Because the masking only affects the tips.
+# rule rename_tip_trimmed_kmc_graph_to_drop_masking_infix:
+#     output:
+#         "{stem}.ggcat-k{ksize}-{unitig_source}.notips-2.sz"
+#     input:
+#         "{stem}.ggcat-k{ksize}-{unitig_source}-droptips.notips-2.sz"
+#     shell:
+#         alias_recipe
+#
+#
+# ruleorder: rename_tip_trimmed_kmc_graph_to_drop_masking_infix > trim_tips
+
+
+rule load_ggcat_with_kmtricks_depths_to_sz:
     output:
         "{stem}.kmtricks-k{ksize}-m{mincount}-r{recurrence}.ggcat-{unitig_source}.sz",
     wildcard_constraints:
@@ -392,7 +772,7 @@ rule load_ggcat_with_depths_to_sz:
         "conda/strainzip.yaml"
     shell:
         """
-        strainzip load --verbose {wildcards.ksize} {input.fasta} {input.depth} {output}
+        strainzip load --verbose {wildcards.ksize} --depth {input.depth} {input.fasta} {output}
         """
 
 
@@ -409,6 +789,20 @@ rule trim_tips:
         "conda/strainzip.yaml"
     shell:
         "strainzip trim --verbose -p {threads} --num-kmer-lengths {params.length} {input} {output}"
+
+
+# FIXME (2024-05-20): Drop this when I've updated the CLI permanently
+rule trim_tips_old:
+    output:
+        "{stem}.notips.sz",
+    wildcard_constraints:
+        length=single_param_wc,
+    input:
+        "{stem}.sz",
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        "strainzip trim --verbose {input} {output}"
 
 
 rule trim_tips_unpressed:
@@ -435,7 +829,7 @@ rule smooth_depths:
         eps=lambda w: 10 ** (-int(w.eps)),
     conda:
         "conda/strainzip.yaml"
-    threads: 36
+    threads: 48
     shell:
         """
         strainzip smooth --verbose -p {threads} --eps {params.eps} {input} {output}
@@ -452,7 +846,9 @@ rule unzip_safe_only_junctions:
     input:
         "{stem}.sz",
     log:
-        checkpoint_dir=directory("{stem}.unzip_safe-{model}-{thresh}-{rounds}.checkpoints.d"),
+        checkpoint_dir=directory(
+            "{stem}.unzip_safe-{model}-{thresh}-{rounds}.checkpoints.d"
+        ),
     params:
         model=lambda w: {
             "lognorm2": "OffsetLogNormal",
@@ -645,7 +1041,7 @@ rule extract_unassembled_cluster_subgraph:
         graph="{stemA}.ggcat-{unitig_source}.{stemB}.clust-e{exponent}-d{thresh}.unassembled-c{clust}-r{radius}.sz",
     wildcard_constraints:
         radius=integer_wc,
-        unitig_source=single_param_wc,
+        # unitig_source=single_param_wc,
     input:
         graph="{stemA}.ggcat-{unitig_source}.sz",
         segment="{stemA}.ggcat-{unitig_source}.{stemB}.clust-e{exponent}-d{thresh}.segment.tsv",
@@ -687,24 +1083,65 @@ rule extract_assembled_cluster_subgraph:
         """
 
 
-rule dump_assembly_results:
+rule dump_assembly_contigs:
     output:
         fasta="{stemA}.ggcat-{unitig_source}.{stemB}.fn",
-        depth="{stemA}.ggcat-{unitig_source}.{stemB}.sequence_depth.nc",
-        segments="{stemA}.ggcat-{unitig_source}.{stemB}.segments.tsv",
     wildcard_constraints:
         unitig_source=noperiod_wc,
     input:
         graph="{stemA}.ggcat-{unitig_source}.{stemB}.sz",
         fasta="{stemA}.ggcat-{unitig_source}.fn",
-        depth="{stemA}.ggcat-{unitig_source}.unitig_depth.nc",
     conda:
         "conda/strainzip.yaml"
     shell:
-        "strainzip dump --verbose {input.graph} {input.fasta} {input.depth} {output.segments} {output.depth} {output.fasta}"
+        "strainzip dump_contigs --verbose {input.graph} {input.fasta} {output.fasta}"
 
 
-rule megahit_assemble:
+rule dump_assembly_segments:
+    output:
+        segments="{stema}.ggcat-{unitig_source}.{stemb}.segments.tsv",
+    wildcard_constraints:
+        unitig_source=noperiod_wc,
+    input:
+        graph="{stema}.ggcat-{unitig_source}.{stemb}.sz",
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        "strainzip dump_segments --verbose {input.graph} {output.segments}"
+
+
+rule dump_assembly_depth:
+    output:
+        depth="{stema}.ggcat-{unitig_source}.{stemb}.sequence_depth.nc",
+    wildcard_constraints:
+        unitig_source=noperiod_wc,
+    input:
+        graph="{stema}.ggcat-{unitig_source}.{stemb}.sz",
+        depth="{stema}.ggcat-{unitig_source}.unitig_depth.nc",
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        "strainzip dump_depth --verbose {input.graph} {input.depth} {output.depth}"
+
+
+# rule dump_assembly_results:
+#     output:
+#         fasta="{stema}.ggcat-{unitig_source}.{stemb}.fn",
+#         depth="{stema}.ggcat-{unitig_source}.{stemb}.sequence_depth.nc",
+#         segments="{stema}.ggcat-{unitig_source}.{stemb}.segments.tsv",
+#     wildcard_constraints:
+#         unitig_source=noperiod_wc,
+#     input:
+#         graph="{stema}.ggcat-{unitig_source}.{stemb}.sz",
+#         fasta="{stema}.ggcat-{unitig_source}.fn",
+#         depth="{stema}.ggcat-{unitig_source}.unitig_depth.nc",
+#     conda:
+#         "conda/strainzip.yaml"
+#     shell:
+#         "strainzip dump --verbose {input.graph} {input.fasta} {input.depth} {output.segments} {output.depth} {output.fasta}"
+
+
+rule megahit_assemble_single_k:
     output:
         dir=directory("data/group/{group}/r.{stem}.megahit-k{ksize}.d"),
         fasta="data/group/{group}/r.{stem}.megahit-k{ksize}.fn",
@@ -732,14 +1169,73 @@ rule megahit_assemble:
                 for mgen in config["mgen_group"][w.group]
             ]
         ),
-    threads: 36
+    resources:
+        memory_flags="--memory 0.5",
+    threads: 48
     shell:
         """
-        megahit -t {threads} --k-list {wildcards.ksize} -o {output.dir} -1 {params.r1} -2 {params.r2}
+        megahit -t {threads} --k-list {wildcards.ksize} {params.memory_flags} -o {output.dir} -1 {params.r1} -2 {params.r2}
         ln {output.dir}/final.contigs.fa {output.fasta}
         """
 
 
+rule megahit_assemble_k_series:
+    output:
+        dir=directory("data/group/{group}/r.{stem}.megahit-full-k{ksize}.d"),
+        fasta="data/group/{group}/r.{stem}.megahit-full-k{ksize}.fn",
+    wildcard_constraints:
+        ksize=integer_wc,
+    input:
+        r1=lambda w: [
+            f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        r2=lambda w: [
+            f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+    params:
+        r1=lambda w: ",".join(
+            [
+                f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
+                for mgen in config["mgen_group"][w.group]
+            ]
+        ),
+        r2=lambda w: ",".join(
+            [
+                f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
+                for mgen in config["mgen_group"][w.group]
+            ]
+        ),
+        kmin=31,
+        kmax=lambda w: w.ksize,
+        kstep=20,
+    threads: 48
+    resources:
+        memory_flags="--memory 0.5",
+    shell:
+        """
+        megahit -t {threads} --k-min {params.kmin} --k-max {params.kmax} --k-step {params.kstep} \
+                {resources.memory_flags} -o {output.dir} -1 {params.r1} -2 {params.r2}
+        ln {output.dir}/final.contigs.fa {output.fasta}
+        """
+
+
+rule compile_ref_genome_mapping:
+    output:
+        "data/group/{group}/reference_genome_quast_contigs.tsv",
+    input:
+        script="scripts/compile_ref_genome_mapping_for_quast.py",
+        refs=lambda w: [
+            f"data/genome/{genome}.fn" for genome in config["genome_group"][w.group]
+        ],
+    params:
+        ref_args=lambda w: [
+            f"{genome}=data/genome/{genome}.fn"
+            for genome in config["genome_group"][w.group]
+        ],
+    shell:
+        "{input.script} {params.ref_args} > {output}"
 
 
 rule quality_asses_assembly_against_all_refs:
@@ -751,7 +1247,7 @@ rule quality_asses_assembly_against_all_refs:
         refs=lambda w: [
             f"data/genome/{genome}.fn" for genome in config["genome_group"][w.group]
         ],
-    threads: 12
+    threads: 48
     params:
         min_tig_length=1000,
         min_identity=99,
@@ -799,6 +1295,21 @@ rule quality_asses_assembly_against_one_ref:
         """
 
 
+# rule quality_asses_assembly_against_one_ref:
+#     output:
+#         directory("{stem}.gquast-{genome}.d"),
+#     input:
+#         tigs="{stem}.fn",
+#         ref="data/genome/{genome}.fn",
+#     threads: 48
+#     params:
+#         min_tig_length=1000,
+#     conda:
+#         "conda/quast.yaml"
+#     shell:
+#         """
+#         metaquast.py --threads={threads} --min-contig {params.min_tig_length} -R {input.ref} --output-dir {output} {input.tigs}
+#         """
 # rule convert_bcalm_to_gfa:
 #     output:
 #         "{stem}.bcalm-k{ksize}.gfa",

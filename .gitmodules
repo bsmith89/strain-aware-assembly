@@ -1,7 +1,6 @@
-[submodule "include/Jellyfish"]
-	path = include/Jellyfish
-	url = https://github.com/gmarcais/Jellyfish
-
 [submodule "include/StrainZip"]
 	path = include/StrainZip
 	url = git@github.com:bsmith89/StrainZip.git
+[submodule "include/kmc"]
+	path = include/kmc
+	url = https://github.com/refresh-bio/kmc.git

@@ -1,3 +1,4 @@
 include: "mgen_preprocess.smk"
 include: "assembly.smk"
-include: "local.smk"
+include: "annotation.smk"
+include: "sra.smk"

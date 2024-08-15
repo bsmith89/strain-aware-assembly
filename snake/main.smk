@@ -68,12 +68,11 @@ wildcard_constraints:
     group=noperiod_wc,
     mgen=noperiod_wc,
     species=noperiod_wc,
-    strain=noperiod_wc,
-    compound_id=noperiod_wc,
-    hmm_cutoff="XX",
-    model=noperiod_wc,
-    param=single_param_wc,
-    params=noperiod_wc,
+    # strain=noperiod_wc,
+    # compound_id=noperiod_wc,
+    # model=noperiod_wc,
+    # param=single_param_wc,
+    # params=noperiod_wc,
 
 
 # {{{1 Default actions

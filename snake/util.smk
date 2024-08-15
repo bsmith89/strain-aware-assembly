@@ -23,11 +23,13 @@ rule install_jupyter_kernel_default:
 
 # Any conda environment spec can be installed for Jupyter use
 # just like the below:
-use rule install_jupyter_kernel_default as install_jupyter_kernel_pymc with:
+use rule install_jupyter_kernel_default as install_named_jupyter_kernel with:
+    output:
+        "install_jupyter_kernel.{conda}",
     params:
-        name="pymc",
+        name=lambda w: w.conda,
     conda:
-        "conda/pymc.yaml"
+        lambda w: "conda/{conda}.yaml"
 
 
 # And then run `snakemake -j1 install_jupyter_kernel_pymc`.
@@ -36,6 +38,8 @@ use rule install_jupyter_kernel_default as install_jupyter_kernel_pymc with:
 rule start_jupyter:
     params:
         port=config["jupyter_port"],
+    conda:
+        "conda/jupyter.yaml"
     shell:
         "jupyter lab --port={params.port} --notebook-dir nb/"
 
