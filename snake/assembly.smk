@@ -691,8 +691,10 @@ rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips_one_step:
     wildcard_constraints:
         ksize=integer_wc,
     input:
+        kmc_dump_script="scripts/kmc_dump_to_stdout.sh",
         merge_script="scripts/merge_kmc_counts.py",
         mean_script="scripts/mean_unitig_kmer_depth.py",
+        load_netcdf_script="scripts/load_unitig_depths_to_netcdf.py",
         fasta="data/group/{group}/{stem}.ggcat-k{ksize}-{unitig_source}.fn",
         pre_and_suf=lambda w: [
             f"data/group/{w.group}/reads/{mgen}/{w.stem}.kmc-k{w.ksize}-{w.unitig_source}.kmc_{pre_or_suf}"
@@ -702,17 +704,25 @@ rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips_one_step:
         ],
     params:
         ksize=lambda w: int(w.ksize),
+        nsamples=lambda w: len(config["mgen_group"][w.group]),
         sample_names=lambda w: ','.join(config["mgen_group"][w.group]),
         args=lambda w: [
-            f"<(kmc_tools transform  data/group/{w.group}/reads/{mgen}/{w.stem}.kmc-k{w.ksize}-{w.unitig_source} dump >(cat))"
+            f"<(scripts/kmc_dump_to_stdout.sh data/group/{w.group}/reads/{mgen}/{w.stem}.kmc-k{w.ksize}-{w.unitig_source})"
             for mgen in config["mgen_group"][w.group]
         ],
     conda:
         "conda/strainzip_kmc.yaml"
     shell:
         """
+        tmp=$(mktemp)
+        echo "Writing unitig depths to $tmp before loading into NetCDF."
+
         {input.merge_script} {params.args} \
-                | {input.mean_script} {params.ksize} {params.sample_names} {input.fasta} {output}
+                | {input.mean_script} {params.ksize} {params.nsamples} {input.fasta} \
+                > $tmp
+        {input.load_netcdf_script} {params.sample_names} $tmp {output}
+
+        rm $tmp
         """
 
 
