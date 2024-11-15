@@ -1,0 +1,6 @@
+name: resfinder
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - resfinder

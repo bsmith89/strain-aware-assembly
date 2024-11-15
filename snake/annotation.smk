@@ -105,3 +105,59 @@ rule download_mmseqs_uniref50_db:
 # rule run_mmseqs_taxonomy:
 #     output:
 
+
+# rule compare_crispr_annotations_minced_megahit_and_strainzip:
+#     output:
+#         sz=" data/group/watson_donor_a/r.proc.ggcat-k111-withmegahit2-droptips.notips-2.smoothed-6.unzip-norm-10-10.cctk-compare.d/MINCED_OUT/strainzip_minced_out.txt",
+#         mh=" data/group/watson_donor_a/r.proc.ggcat-k111-withmegahit2-droptips.notips-2.smoothed-6.unzip-norm-10-10.cctk-compare.d/MINCED_OUT/megahit_minced_out.txt",
+#     input:
+#         sz=" data/group/watson_donor_a/r.proc.ggcat-k111-withmegahit2-droptips.notips-2.smoothed-6.unzip-norm-10-10.fn",
+#         mh=" data/group/watson_donor_a/r.proc.megahit-full-k111.fn",
+#     params:
+#         cctkdir="data/group/watson_donor_a/r.proc.ggcat-k111-withmegahit2-droptips.notips-2.smoothed-6.unzip-norm-10-10.cctk-compare.d"
+#     conda:
+#         "conda/cctk.yaml"
+#     shell:
+#         """
+#         tmpdir=$(mktemp -d) && echo $tmpdir
+#         ln -s $(realpath {input.sz}) $tmpdir/strainzip.fn
+#         ln -s $(realpath {input.mh}) $tmpdir/megahit.fn
+#         cctk minced --run-minced -o {params.cctkdir} -i $tmpdir
+#         rm -r $tmpdir
+#         """
+
+
+rule run_crispr_array_annotation_minced:
+    output:
+        minced="{stem}.cctk.d/MINCED_OUT/contigs_minced_out.txt",
+    input:
+        "{stem}.fn"
+    params:
+        cctkdir="{stem}.cctk.d"
+    conda:
+        "conda/cctk.yaml"
+    shell:
+        """
+        tmpdir=$(mktemp -d) && echo $tmpdir
+        ln -s $(realpath {input}) $tmpdir/contigs.fn
+        cctk minced --run-minced -o {params.cctkdir} -i $tmpdir
+        rm -r $tmpdir
+        """
+
+
+rule run_crispr_array_annotation_minced_postprocessing:
+    output:
+        processed=directory("{stem}.cctk.d/PROCESSED"),
+    input:
+        "{stem}.cctk.d/MINCED_OUT/contigs_minced_out.txt"
+    params:
+        cctkdir="{stem}.cctk.d",
+        snp_thresh=0,
+        min_shared=0,
+    conda:
+        "conda/cctk.yaml"
+    shell:
+        """
+        cctk minced -o {params.cctkdir} -p --snp-thresh {params.snp_thresh} --min-shared {params.min_shared}
+        """
+

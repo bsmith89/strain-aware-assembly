@@ -1,6 +1,10 @@
 mgen_id	preprocessing	sra_accession	r1_path	r2_path
 Bacteroides-thetaiotaomicron-1-1-6_MAF-2_wgs_reads	dedup.deadapt.qtrim	SRR24651254	raw/sra/SRR24651254_1.fq.gz	raw/sra/SRR24651254_2.fq.gz
 Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_wgs_reads	dedup.deadapt.qtrim	SRR24651305	raw/sra/SRR24651305_1.fq.gz	raw/sra/SRR24651305_2.fq.gz
+Bacteroides-thetaiotaomicron-1-1-6_MAF-2_sim_len150_seed0_cov10	dedup.deadapt.qtrim		
+Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_sim_len150_seed0_cov10	dedup.deadapt.qtrim		
+Bacteroides-thetaiotaomicron-1-1-6_MAF-2_tiles_k111	noop			
+Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_tiles_k111	noop			
 watson_DB_R04_CDI_P_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712816	raw/sra/SRR13712816_1.fq.gz	raw/sra/SRR13712816_2.fq.gz
 watson_DB_R04_CDI_P_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712817	raw/sra/SRR13712817_1.fq.gz	raw/sra/SRR13712817_2.fq.gz
 watson_DB_R03_CDI_P_08_POST	hfilt.dedup.deadapt.qtrim	SRR13712818	raw/sra/SRR13712818_1.fq.gz	raw/sra/SRR13712818_2.fq.gz

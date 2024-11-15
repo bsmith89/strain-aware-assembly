@@ -160,7 +160,7 @@ rule deduplicate_reads:
         r1="{stemA}/r1{stemB}fq.gz",
         r2="{stemA}/r2{stemB}fq.gz",
     resources:
-        mem_mb=10_000,
+        mem_mb=40_000,
         walltime_min=600,
     container:
         config["container"]["toolz"]

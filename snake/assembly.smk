@@ -1,9 +1,3 @@
-config["genome"] = pd.read_table("meta/genome.tsv", dtype=str, index_col=["genome_id"])
-config["genome_group"]["xjin"] = pd.read_table(
-    "meta/genome.tsv", dtype=str, index_col=["genome_id"]
-).index
-
-
 rule start_shell_ggcat:
     container:
         config["container"]["ggcat"]
@@ -91,6 +85,88 @@ rule link_project_reference_genome_no_species:
         genome=noperiod_wc,
     shell:
         alias_recipe
+
+
+rule normalize_genome_sequence:
+    output:
+        "{stem}.norm.fn",
+    input:
+        "{stem}.fn",
+    shell:
+        "sed '/^>/!s/[^ACGT]/N/g' {input} > {output}"
+
+
+rule tile_reference_genome:
+    output:
+        "{stem}.tiles-k{ksize}.fn",
+    input:
+        script="scripts/tile_fasta.py",
+        fn="{stem}.fn",
+    wildcard_constraints:
+        genome=noperiod_wc,
+        ksize=integer_wc,
+    params:
+        length=lambda w: int(w.ksize),
+        overlap=lambda w: int(w.ksize) - 1,
+    shell:
+        "{input.script} {params.length} {params.overlap} {input.fn} > {output}"
+
+
+rule genome_fasta_to_fastq:
+    """
+    Convert a FASTA formatted file into FASTQ.
+    \
+    Input/output patterns are limited to files found in */genome/* in order to
+    prevent circular dependencies.
+    \
+    """
+    output:
+        "{stemA}/genome/{stemB}.fq.gz",
+    input:
+        "{stemA}/genome/{stemB}.fn",
+    conda:
+        "conda/seqtk.yaml"
+    shell:
+        "seqtk seq -F '#' {input} | gzip -c > {output}"
+
+
+rule alias_tiled_genome_as_reads:
+    output:
+        r1="data/reads/{genome}_tiles_k{ksize}/r1.proc.fq.gz",
+        r2="data/reads/{genome}_tiles_k{ksize}/r2.proc.fq.gz",
+    input:
+        tiles="data/genome/{genome}.norm.tiles-k{ksize}.fq.gz"
+    shell:
+        """
+        ln -rs {input.tiles} {output.r1}
+        ln -rs {input.tiles} {output.r2}
+        """
+
+
+ruleorder: alias_tiled_genome_as_reads > alias_cleaned_reads
+
+
+rule simulate_wgs_reads:
+    output:
+        r1="data/reads/{genome}_sim_len150_seed{seed}_cov{cov}/r1.fq.gz",
+        r2="data/reads/{genome}_sim_len150_seed{seed}_cov{cov}/r2.fq.gz",
+    input:
+        fasta="data/genome/{genome}.fn",
+    params:
+        outdir="data/reads/{genome}_sim_len150_seed{seed}_cov{cov}",
+    conda:
+        "conda/art_read_sim.yaml"
+    shell:
+        """
+        art_illumina --rndSeed {wildcards.seed} \
+                --seqSys HS25 \
+                --len 150 --paired --mflen 450 --sdev 30 \
+                --fcov {wildcards.cov} \
+                --noALN \
+                --in {input.fasta} --out {params.outdir}/
+        gzip -c {params.outdir}/1.fq > {output.r1} && rm {params.outdir}/1.fq
+        gzip -c {params.outdir}/2.fq > {output.r2} && rm {params.outdir}/2.fq
+        """
 
 
 rule construct_mgen_group_input_table:
@@ -584,6 +660,26 @@ rule run_ggcat_on_reads:
         ggcat build -s 2 -j {threads} -o {output} -k {wildcards.ksize} -e {input.r1} {input.r2}
         """
 
+rule run_ggcat_on_reads_no_min:
+    output:
+        "data/group/{group}/r.{stem}.ggcat-k{ksize}-denovo0.fn",
+    input:
+        r1=lambda w: [
+            f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        r2=lambda w: [
+            f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+    container:
+        config["container"]["ggcat"]
+    threads: 48
+    shell:
+        """
+        ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e {input.r1} {input.r2}
+        """
+
 rule run_ggcat_on_reads_and_include_megahit_contigs:
     output:
         "data/group/{group}/r.{stem}.ggcat-k{ksize}-withmegahit.fn",
@@ -643,6 +739,37 @@ rule run_ggcat_on_reads_and_include_megahit_contigs_twice:
         rm -r $input_dir
         """
 
+rule run_ggcat_on_reads_and_include_megahit_contigs_min3:
+    output:
+        "data/group/{group}/r.{stem}.ggcat-k{ksize}-withmegahit3.fn",
+    input:
+        r1=lambda w: [
+            f"data/reads/{mgen}/r1.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        r2=lambda w: [
+            f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
+            for mgen in config["mgen_group"][w.group]
+        ],
+        contigs="data/group/{group}/r.{stem}.megahit-full-k{ksize}.fn",
+    container:
+        config["container"]["ggcat"]
+    threads: 48
+    shell:
+        """
+        input_dir=$(mktemp -d)
+        echo $input_dir
+
+        # MEGAHIT contigs
+        ln -rs {input.contigs} $input_dir/megahit_contigs1.fa
+        ln -rs {input.contigs} $input_dir/megahit_contigs2.fa
+        ln -rs {input.contigs} $input_dir/megahit_contigs3.fa
+
+        ggcat build -s 3 -j {threads} -o {output} -k {wildcards.ksize} -e $input_dir/* {input.r1} {input.r2}
+
+        rm -r $input_dir
+        """
+
 
 rule calculate_mean_unitig_depths_across_samples_from_kmtricks:
     output:
@@ -691,7 +818,6 @@ rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips_one_step:
     wildcard_constraints:
         ksize=integer_wc,
     input:
-        kmc_dump_script="scripts/kmc_dump_to_stdout.sh",
         merge_script="scripts/merge_kmc_counts.py",
         mean_script="scripts/mean_unitig_kmer_depth.py",
         load_netcdf_script="scripts/load_unitig_depths_to_netcdf.py",
@@ -704,7 +830,6 @@ rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips_one_step:
         ],
     params:
         ksize=lambda w: int(w.ksize),
-        nsamples=lambda w: len(config["mgen_group"][w.group]),
         sample_names=lambda w: ','.join(config["mgen_group"][w.group]),
         args=lambda w: [
             f"<(scripts/kmc_dump_to_stdout.sh data/group/{w.group}/reads/{mgen}/{w.stem}.kmc-k{w.ksize}-{w.unitig_source})"
@@ -714,15 +839,8 @@ rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips_one_step:
         "conda/strainzip_kmc.yaml"
     shell:
         """
-        tmp=$(mktemp)
-        echo "Writing unitig depths to $tmp before loading into NetCDF."
-
         {input.merge_script} {params.args} \
-                | {input.mean_script} {params.ksize} {params.nsamples} {input.fasta} \
-                > $tmp
-        {input.load_netcdf_script} {params.sample_names} $tmp {output}
-
-        rm $tmp
+                | {input.mean_script} {params.ksize} {params.sample_names} {input.fasta} {output}
         """
 
 
@@ -845,6 +963,23 @@ rule smooth_depths:
         strainzip smooth --verbose -p {threads} --eps {params.eps} {input} {output}
         """
 
+rule smooth_depths_enforce_symmetry:
+    output:
+        "{stem}.smoothed-sym-{eps}.sz",
+    wildcard_constraints:
+        eps=integer_wc,
+    input:
+        "{stem}.sz",
+    params:
+        eps=lambda w: 10 ** (-int(w.eps)),
+    conda:
+        "conda/strainzip.yaml"
+    threads: 48
+    shell:
+        """
+        strainzip smooth --verbose -p {threads} --eps {params.eps} --enforce-symmetry {input} {output}
+        """
+
 
 rule unzip_safe_only_junctions:
     output:
@@ -958,6 +1093,61 @@ rule unzip_junctions:
                 {input} {output.final}
         """
 
+rule unzip_junctions_no_balancing:
+    output:
+        final="{stem}.unzip-{model}-nobal-{thresh}-{rounds}.sz",
+    wildcard_constraints:
+        model=single_param_wc,
+        thresh=single_param_wc,
+        rounds=single_param_wc,
+    input:
+        "{stem}.sz",
+    log:
+        checkpoint_dir=directory("{stem}.unzip-{model}-nobal-{thresh}-{rounds}.checkpoints.d"),
+    params:
+        model=lambda w: {
+            "lognorm2": "OffsetLogNormal",
+            "norm": "Normal --model-hyperparameters tol=1e-4",
+            "normscaled": "NormalScaled --model-hyperparameters alpha=0.5",
+            "lapl": "Laplace",
+            "t5": "StudentsT --model-hyperparameters df=5",
+            "huber": "Huber --model-hyperparameters delta=1",
+        }[w.model],
+        min_depth=1.0,
+        score_thresh=lambda w: float(w.thresh),
+        relative_error_thresh=0.1,
+        absolute_error_thresh=1.0,
+        max_rounds=lambda w: int(w.rounds),
+        excess_thresh=0,
+        completeness_thresh=1,
+    conda:
+        "conda/strainzip.yaml"
+    threads: 48
+    shell:
+        """
+        # FIXME: Figure out why setting environmental variables here is necessary.
+        export XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1 --xla_force_host_platform_device_count=8"
+        export OPENBLAS_NUM_THREADS=1
+        export MKL_NUM_THREADS=1
+        export OMP_NUM_THREAD=1
+        export NUM_INTER_THREADS=1
+        export NUM_INTRA_THREADS=1
+
+        mkdir -p {log.checkpoint_dir}
+
+        strainzip unzip --verbose -p {threads} \
+                --min-depth {params.min_depth} \
+                --skip-extra-large --max-rounds {params.max_rounds} --model {params.model} \
+                --score aic --score-thresh {params.score_thresh} \
+                --no-balance \
+                --relative-error-thresh {params.relative_error_thresh} \
+                --absolute-error-thresh {params.absolute_error_thresh} \
+                --excess-thresh {params.excess_thresh} \
+                --completeness-thresh {params.completeness_thresh} \
+                --checkpoint-dir {log.checkpoint_dir} \
+                {input} {output.final}
+        """
+
 
 rule benchmark_depth_model:
     output:
@@ -1007,12 +1197,12 @@ rule benchmark_depth_model:
 
 rule precluster_vertices:
     output:
-        vertex="{stem}.preclust-e{exponent}.vertex.tsv",
+        vertex="{stem}.preclust-e{exponent}-n{num_preclust}.vertex.tsv",
     input:
         "{stem}.sz",
     params:
         exponent=lambda w: int(w.exponent) / 100,
-        num_preclust=10_000,
+        num_preclust=lambda w: int(w.num_preclust),
     threads: 12
     conda:
         "conda/strainzip.yaml"
@@ -1024,14 +1214,14 @@ rule precluster_vertices:
 
 rule cluster_vertices:
     output:
-        vertex="{stem}.clust-e{exponent}-d{thresh}.vertex.tsv",
-        segment="{stem}.clust-e{exponent}-d{thresh}.segment.tsv",
-        depth="{stem}.clust-e{exponent}-d{thresh}.depth.tsv",
-        shared="{stem}.clust-e{exponent}-d{thresh}.shared.tsv",
-        meta="{stem}.clust-e{exponent}-d{thresh}.meta.tsv",
+        vertex="{stem}.clust-e{exponent}-n{num}-d{thresh}.vertex.tsv",
+        segment="{stem}.clust-e{exponent}-n{num}-d{thresh}.segment.tsv",
+        depth="{stem}.clust-e{exponent}-n{num}-d{thresh}.depth.tsv",
+        shared="{stem}.clust-e{exponent}-n{num}-d{thresh}.shared.tsv",
+        meta="{stem}.clust-e{exponent}-n{num}-d{thresh}.meta.tsv",
     input:
         graph="{stem}.sz",
-        preclust="{stem}.preclust-e{exponent}.vertex.tsv",
+        preclust="{stem}.preclust-e{exponent}-n{num}.vertex.tsv",
     params:
         thresh=lambda w: int(w.thresh) / 1000,
         exponent=lambda w: int(w.exponent) / 100,
@@ -1092,6 +1282,14 @@ rule extract_assembled_cluster_subgraph:
                 {output.graph}
         """
 
+
+rule draw_graph:
+    output: "{stem}.graph.pdf"
+    input: "{stem}.sz"
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        "strainzip draw {input} {output}"
 
 rule dump_assembly_contigs:
     output:
@@ -1330,3 +1528,14 @@ rule quality_asses_assembly_against_one_ref:
 #         ksize=lambda w: int(w.ksize),
 #     shell:
 #         "{input.script} {input.fn} {output} {params.ksize}"
+
+rule collect_assembly_and_annotations:
+    output:
+        "data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.ASSEMBLY_DETAILS.flag"
+    input:
+        quast="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.quast-{group}.d",
+        cctk="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.cctk.d/PROCESSED",
+        clust="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.clust-e50-n20000-d20.meta.tsv",
+        tigr02013="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.cds.tran.hmmer-TIGR02013-ga.tsv",
+        resfinder="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.resfinder.d",
+        unpressed="data/group/{group}/r.proc.{stemA}.notips-2-unpressed.sz",
