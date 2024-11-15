@@ -1545,9 +1545,15 @@ rule collect_assembly_and_annotations:
     output:
         "data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.ASSEMBLY_DETAILS.flag"
     input:
+        final="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.sz",
         quast="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.quast-{group}.d",
         cctk="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.cctk.d/PROCESSED",
-        clust="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.clust-e50-n20000-d20.meta.tsv",
+        clust_meta="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.clust-e50-n20000-d20.meta.tsv",
+        clust_vertex="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.clust-e50-n20000-d20.vertex.tsv",
+        clust_segment="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.clust-e50-n20000-d20.segment.tsv",
         tigr02013="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.cds.tran.hmmer-TIGR02013-ga.tsv",
         resfinder="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.resfinder.d",
+        resfinder="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.genomad.d",
         unpressed="data/group/{group}/r.proc.{stemA}.notips-2-unpressed.sz",
+    shell:
+        "echo {input} > {output}"
