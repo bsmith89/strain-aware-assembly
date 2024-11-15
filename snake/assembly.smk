@@ -422,7 +422,7 @@ rule alias_kmc_counts_denovo0:
     changed so much when using the "droptips" masking approach below.
     """
     output:
-        pre="data/group/{group}/reads/{mgen}/r.{stem}.kmc-k{ksize}-denovo0.kmc_{pre_or_suf}",
+        "data/group/{group}/reads/{mgen}/r.{stem}.kmc-k{ksize}-denovo0.kmc_{pre_or_suf}",
     input:
         reads_pre="data/reads/{mgen}/r.{stem}.kmc-k{ksize}.kmc_{pre_or_suf}",
     shell:
