@@ -416,6 +416,18 @@ rule build_kmc_mask_from_fasta:
         rm -r $workdir
         """
 
+rule alias_kmc_counts_denovo0:
+    """
+    NOTE (2024-11-15): This rule is only necessary because the file naming
+    changed so much when using the "droptips" masking approach below.
+    """
+    output:
+        pre="data/group/{group}/reads/{mgen}/r.{stem}.kmc-k{ksize}-denovo0.kmc_{pre_or_suf}",
+    input:
+        reads_pre="data/reads/{mgen}/r.{stem}.kmc-k{ksize}.kmc_{pre_or_suf}",
+    shell:
+        alias_recipe
+
 
 rule filter_kmc_counts_by_notips_contigs:
     output:
@@ -812,7 +824,7 @@ rule calculate_mean_unitig_depths_across_samples_from_kmtricks:
 #         """
 
 
-rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips_one_step:
+rule calculate_mean_unitig_depths_across_samples_from_kmc_one_step:
     output:
         "data/group/{group}/{stem}.ggcat-k{ksize}-{unitig_source}.unitig_depth.nc",
     wildcard_constraints:
@@ -858,15 +870,15 @@ rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips_one_step:
 #         strainzip load --verbose {wildcards.ksize} {input.fasta} {output}
 #         """
 
-rule load_ggcat_with_droptips_kmc_depths_to_sz:
+rule load_ggcat_with_kmc_depths_to_sz:
     output:
-        "{stem}.ggcat-k{ksize}-{unitig_source}-droptips.sz",
+        "{stem}.ggcat-k{ksize}-{unitig_source}.sz",
     wildcard_constraints:
         unitig_source=single_param_wc,
         ksize=integer_wc,
     input:
-        fasta="{stem}.ggcat-k{ksize}-{unitig_source}-droptips.fn",
-        depth="{stem}.ggcat-k{ksize}-{unitig_source}-droptips.unitig_depth.nc",
+        fasta="{stem}.ggcat-k{ksize}-{unitig_source}.fn",
+        depth="{stem}.ggcat-k{ksize}-{unitig_source}.unitig_depth.nc",
     conda:
         "conda/strainzip.yaml"
     shell:
