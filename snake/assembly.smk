@@ -1553,7 +1553,7 @@ rule collect_assembly_and_annotations:
         clust_segment="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.clust-e50-n20000-d20.segment.tsv",
         tigr02013="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.cds.tran.hmmer-TIGR02013-ga.tsv",
         resfinder="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.resfinder.d",
-        resfinder="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.genomad.d",
+        genomad="data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.genomad.d",
         unpressed="data/group/{group}/r.proc.{stemA}.notips-2-unpressed.sz",
     shell:
         "echo {input} > {output}"
