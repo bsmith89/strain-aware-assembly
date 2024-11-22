@@ -376,7 +376,7 @@ rule run_kmtricks_merge:
 
 rule drop_short_tips_from_ggcat_fasta:
     output:
-        "{stem}.ggcat-k{ksize}-{unitig_source}.droptips-{length}.fn"
+        "{stem}.ggcat-k{ksize}-{unitig_source}.droptips-{length}.fn",
     wildcard_constraints:
         length=single_param_wc,
     input:
@@ -386,16 +386,16 @@ rule drop_short_tips_from_ggcat_fasta:
         length_mult=lambda w: float(w.length),
         ksize=lambda w: int(w.ksize),
     conda:
-        'conda/strainzip.yaml'
+        "conda/strainzip.yaml"
     shell:
         "{input.script} {params.ksize} {params.length_mult} {input.fasta} {output}"
 
 
 rule rerun_ggcat_on_droptips_fasta:
     output:
-        "{stem}.ggcat-k{ksize}-{unitig_source}-droptips.fn"
+        "{stem}.ggcat-k{ksize}-{unitig_source}-droptips.fn",
     input:
-        "{stem}.ggcat-k{ksize}-{unitig_source}.droptips-2.fn"
+        "{stem}.ggcat-k{ksize}-{unitig_source}.droptips-2.fn",
     container:
         config["container"]["ggcat"]
     threads: 48
@@ -442,6 +442,7 @@ rule run_kmc_on_reads:
         rm -r $filelist $workdir
         """
 
+
 rule build_kmc_mask_from_fasta:
     output:
         pre="{stem}.kmc-k{ksize}-mask.kmc_pre",
@@ -464,6 +465,7 @@ rule build_kmc_mask_from_fasta:
         # Cleanup
         rm -r $workdir
         """
+
 
 rule alias_kmc_counts_denovo0:
     """
@@ -504,17 +506,17 @@ rule filter_kmc_counts_by_notips_contigs:
 # useful for debugging. In reality, I should only stream the output.
 # e.g. with `<(kmc_tools transform  data/group/{w.group}/reads/{mgen}/r.{w.stem} dump >(cat))`
 rule dump_kmc_counts:
-    output: "{stem}.kcounts.tsv",
+    output:
+        "{stem}.kcounts.tsv",
     input:
         pre="{stem}.kmc_pre",
         suf="{stem}.kmc_suf",
     params:
-        dbname="{stem}"
+        dbname="{stem}",
     conda:
         "conda/kmc.yaml"
     shell:
         "kmc_tools transform {params.dbname} dump -s {output}"
-
 
 
 rule merge_kmc_counts_to_table:
@@ -528,7 +530,7 @@ rule merge_kmc_counts_to_table:
             )
         ],
     params:
-        header=lambda w: "kmer\t" + '\t'.join(config['mgen_group'][w.group]),
+        header=lambda w: "kmer\t" + "\t".join(config["mgen_group"][w.group]),
         args=lambda w: [
             f"<(kmc_tools transform  data/group/{w.group}/reads/{mgen}/r.{w.stem} dump >(cat))"
             for mgen in config["mgen_group"][w.group]
@@ -540,6 +542,7 @@ rule merge_kmc_counts_to_table:
         echo "{params.header}" > {output}
         scripts/merge_kmc_counts.py {params.args} | tqdm >> {output}
         """
+
 
 rule load_kmc_merged_table_to_sqlite:
     output:
@@ -721,6 +724,7 @@ rule run_ggcat_on_reads:
         ggcat build -s 2 -j {threads} -o {output} -k {wildcards.ksize} -e {input.r1} {input.r2}
         """
 
+
 rule run_ggcat_on_reads_no_min:
     output:
         "data/group/{group}/r.{stem}.ggcat-k{ksize}-denovo0.fn",
@@ -740,6 +744,7 @@ rule run_ggcat_on_reads_no_min:
         """
         ggcat build -s 1 -j {threads} -o {output} -k {wildcards.ksize} -e {input.r1} {input.r2}
         """
+
 
 rule run_ggcat_on_reads_and_include_megahit_contigs:
     output:
@@ -770,6 +775,7 @@ rule run_ggcat_on_reads_and_include_megahit_contigs:
         rm -r $input_dir
         """
 
+
 rule run_ggcat_on_reads_and_include_megahit_contigs_twice:
     output:
         "data/group/{group}/r.{stem}.ggcat-k{ksize}-withmegahit2.fn",
@@ -799,6 +805,7 @@ rule run_ggcat_on_reads_and_include_megahit_contigs_twice:
 
         rm -r $input_dir
         """
+
 
 rule run_ggcat_on_reads_and_include_megahit_contigs_min3:
     output:
@@ -852,6 +859,7 @@ rule calculate_mean_unitig_depths_across_samples_from_kmtricks:
         rm $tmpdb
         """
 
+
 # rule calculate_mean_unitig_depths_across_samples_from_kmc_droptips:
 #     output:
 #         "data/group/{group}/{stem}.ggcat-k{ksize}-{unitig_source}-droptips.unitig_depth.nc",
@@ -891,7 +899,7 @@ rule calculate_mean_unitig_depths_across_samples_from_kmc_one_step:
         ],
     params:
         ksize=lambda w: int(w.ksize),
-        sample_names=lambda w: ','.join(config["mgen_group"][w.group]),
+        sample_names=lambda w: ",".join(config["mgen_group"][w.group]),
         args=lambda w: [
             f"<(scripts/kmc_dump_to_stdout.sh data/group/{w.group}/reads/{mgen}/{w.stem}.kmc-k{w.ksize}-{w.unitig_source})"
             for mgen in config["mgen_group"][w.group]
@@ -1025,6 +1033,7 @@ rule smooth_depths:
         strainzip smooth --verbose -p {threads} --eps {params.eps} {input} {output}
         """
 
+
 rule smooth_depths_enforce_symmetry:
     output:
         "{stem}.smoothed-sym-{eps}.sz",
@@ -1155,6 +1164,7 @@ rule unzip_junctions:
                 {input} {output.final}
         """
 
+
 rule unzip_junctions_no_balancing:
     output:
         final="{stem}.unzip-{model}-nobal-{thresh}-{rounds}.sz",
@@ -1165,7 +1175,9 @@ rule unzip_junctions_no_balancing:
     input:
         "{stem}.sz",
     log:
-        checkpoint_dir=directory("{stem}.unzip-{model}-nobal-{thresh}-{rounds}.checkpoints.d"),
+        checkpoint_dir=directory(
+            "{stem}.unzip-{model}-nobal-{thresh}-{rounds}.checkpoints.d"
+        ),
     params:
         model=lambda w: {
             "lognorm2": "OffsetLogNormal",
@@ -1403,12 +1415,15 @@ rule extract_assembled_cluster_subgraph:
 
 
 rule draw_graph:
-    output: "{stem}.graph.pdf"
-    input: "{stem}.sz"
+    output:
+        "{stem}.graph.pdf",
+    input:
+        "{stem}.sz",
     conda:
         "conda/strainzip.yaml"
     shell:
         "strainzip draw {input} {output}"
+
 
 rule dump_assembly_contigs:
     output:

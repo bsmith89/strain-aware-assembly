@@ -128,6 +128,7 @@ rule blastn_to_benchmark_sequences:
         blastn -subject {input.subject} -query {input.query} -outfmt 6 -max_target_seqs 1000000000 -perc_identity 50 > {output}
         """
 
+
 rule collect_assembly_and_annotations:
     output:
         "data/group/{group}/r.proc.{stemA}.notips-2.{stemB}.ASSEMBLY_DETAILS.flag",

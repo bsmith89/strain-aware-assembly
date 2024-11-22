@@ -31,6 +31,8 @@ rule extract_single_tigrfam_model:
         """
         hmmfetch {input} TIGR{wildcards.number}.1 > {output}
         """
+
+
 # NOTE (2024-06-19): I only accept TIGRXXXXX.1 here,
 # even if there are later versions like .2
 
@@ -38,9 +40,11 @@ rule extract_single_tigrfam_model:
 rule prokka_annotate_cluster:
     output:
         directory("data/{stem}.prokka.d"),
-    input: "data/{stem}.fn"
+    input:
+        "data/{stem}.fn",
     threads: 24
-    conda: 'conda/prokka.yaml'
+    conda:
+        "conda/prokka.yaml"
     shell:
         """
         prokka --force --cpus {threads} {input} \
@@ -53,7 +57,7 @@ rule prokka_annotate_cluster:
 
 rule run_resfinder:
     output:
-        dir=directory("{stem}.resfinder.d")
+        dir=directory("{stem}.resfinder.d"),
     input:
         fasta="{stem}.fn",
         db="ref/resfinder_db",
@@ -65,7 +69,7 @@ rule run_resfinder:
 
 rule download_genomad_db:
     output:
-        "ref/genomad_db"
+        "ref/genomad_db",
     conda:
         "conda/genomad.yaml"
     shell:
@@ -73,12 +77,13 @@ rule download_genomad_db:
 
 
 rule run_genomad:
-    output: directory("{stem}.genomad.d")  # FIXME
+    output:
+        directory("{stem}.genomad.d"),  # FIXME
     input:
         db="ref/genomad_db",
         fasta="{stem}.fn",
     params:
-        dir="{stem}.genomad.d"
+        dir="{stem}.genomad.d",
     conda:
         "conda/genomad.yaml"
     threads: 48
@@ -97,10 +102,11 @@ rule download_mmseqs_uniref50_db:
     conda:
         "conda/mmseqs.yaml"
     params:
-        stem="ref/mmseqs_uniref50/db"
+        stem="ref/mmseqs_uniref50/db",
     threads: 4
     shell:
         "mkdir -p {output} && mmseqs databases --threads {threads} UniRef50 {params.stem} $TMPDIR"
+
 
 # rule run_mmseqs_taxonomy:
 #     output:
@@ -131,9 +137,9 @@ rule run_crispr_array_annotation_minced:
     output:
         minced="{stem}.cctk.d/MINCED_OUT/contigs_minced_out.txt",
     input:
-        "{stem}.fn"
+        "{stem}.fn",
     params:
-        cctkdir="{stem}.cctk.d"
+        cctkdir="{stem}.cctk.d",
     conda:
         "conda/cctk.yaml"
     shell:
@@ -149,7 +155,7 @@ rule run_crispr_array_annotation_minced_postprocessing:
     output:
         processed=directory("{stem}.cctk.d/PROCESSED"),
     input:
-        "{stem}.cctk.d/MINCED_OUT/contigs_minced_out.txt"
+        "{stem}.cctk.d/MINCED_OUT/contigs_minced_out.txt",
     params:
         cctkdir="{stem}.cctk.d",
         snp_thresh=0,
@@ -160,4 +166,3 @@ rule run_crispr_array_annotation_minced_postprocessing:
         """
         cctk minced -o {params.cctkdir} -p --snp-thresh {params.snp_thresh} --min-shared {params.min_shared}
         """
-

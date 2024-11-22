@@ -9,7 +9,9 @@ rule download_sra_raw_fastq:
 
 
 rule gzip_sra_fastq:
-    output: "raw/sra/{stem}.fq.gz"
-    input: "raw/sra/{stem}.fastq"
+    output:
+        "raw/sra/{stem}.fq.gz",
+    input:
+        "raw/sra/{stem}.fastq",
     shell:
         "gzip -c {input} > {output}"

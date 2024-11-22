@@ -268,6 +268,7 @@ rule diamond_search_fastq:
         """
         )
 
+
 rule hmmpress:
     output:
         h3m="ref/hmm/{model}.hmm.h3m",
@@ -283,16 +284,16 @@ rule hmmpress:
 rule search_hmm:
     output:
         tbl="data/{stem}.hmmer-{model}-{hmm_cutoff}.tblout",
-        domtbl="data/{stem}.hmmer-{model}-{hmm_cutoff}.domtblout"
+        domtbl="data/{stem}.hmmer-{model}-{hmm_cutoff}.domtblout",
     wildcard_constraints:
-        hmm_cutoff='ga|nc|tc'
+        hmm_cutoff="ga|nc|tc",
     input:
-        faa = "data/{stem}.fa",
-        hmm = "ref/hmm/{model}.hmm",
-        h3f = "ref/hmm/{model}.hmm.h3f",
-        h3i = "ref/hmm/{model}.hmm.h3i",
-        h3m = "ref/hmm/{model}.hmm.h3m",
-        h3p = "ref/hmm/{model}.hmm.h3p"
+        faa="data/{stem}.fa",
+        hmm="ref/hmm/{model}.hmm",
+        h3f="ref/hmm/{model}.hmm.h3f",
+        h3i="ref/hmm/{model}.hmm.h3i",
+        h3m="ref/hmm/{model}.hmm.h3m",
+        h3p="ref/hmm/{model}.hmm.h3p",
     threads: 2
     shell:
         """
@@ -306,8 +307,10 @@ rule search_hmm:
 
 
 rule parse_hmmsearch_tblout:
-    output: "{stem}.hmmer-{model}-{hmm_cutoff}.tsv"
-    input: "{stem}.hmmer-{model}-{hmm_cutoff}.tblout"
+    output:
+        "{stem}.hmmer-{model}-{hmm_cutoff}.tsv",
+    input:
+        "{stem}.hmmer-{model}-{hmm_cutoff}.tblout",
     shell:
         """
         grep -v '^#' {input} | sed 's:\\s\\+:\t:g' | cut -f1,3,6 > {output}

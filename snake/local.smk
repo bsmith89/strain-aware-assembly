@@ -43,9 +43,12 @@ rule link_xjin_reference_genome:
 
 
 rule link_processed_ucfmt_d97_data:
-    output: "data/reads/DS0097_{stem}/{r}.proc.fq.gz"
-    input: "/pollard/home/bsmith/Projects/strain-corr/data/reads/DS0097_{stem}/{r}.proc.fq.gz"
+    output:
+        "data/reads/DS0097_{stem}/{r}.proc.fq.gz",
+    input:
+        "/pollard/home/bsmith/Projects/strain-corr/data/reads/DS0097_{stem}/{r}.proc.fq.gz",
     shell:
         alias_recipe_norelative
+
 
 ruleorder: link_processed_ucfmt_d97_data > alias_cleaned_reads

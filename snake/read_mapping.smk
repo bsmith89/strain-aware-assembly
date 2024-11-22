@@ -9,7 +9,7 @@ rule bowtie_index_build_megahit_coassembly:
     input:
         "data/group/{group}/r.proc.megahit-full-k111.fn",
     params:
-        bowtie2_index="data/group/{group}/r.proc.megahit-full-k111.bowtie2_index.d/contigs"
+        bowtie2_index="data/group/{group}/r.proc.megahit-full-k111.bowtie2_index.d/contigs",
     threads: 24
     resources:
         mem_mb=int(100e3),
@@ -18,8 +18,10 @@ rule bowtie_index_build_megahit_coassembly:
         bowtie2-build --threads {threads} {input} {params.bowtie2_index}
         """
 
+
 rule bowtie2_map_reads_to_megahit_assembly:
-    output: 'data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.bam'
+    output:
+        "data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.bam",
     input:
         r1="data/reads/{mgen}/r1.proc.fq.gz",
         r2="data/reads/{mgen}/r2.proc.fq.gz",
@@ -30,7 +32,7 @@ rule bowtie2_map_reads_to_megahit_assembly:
         bt2_r1="data/group/{group}/r.proc.megahit-full-k111.bowtie2_index.d/contigs.rev.1.bt2",
         bt2_r2="data/group/{group}/r.proc.megahit-full-k111.bowtie2_index.d/contigs.rev.2.bt2",
     params:
-        bowtie2_index="data/group/{group}/r.proc.megahit-full-k111.bowtie2_index.d/contigs"
+        bowtie2_index="data/group/{group}/r.proc.megahit-full-k111.bowtie2_index.d/contigs",
     conda:
         "conda/bowtie2.yaml"
     threads: 4
@@ -56,7 +58,8 @@ rule tally_position_depth_from_bam:
 
 
 rule calculate_gene_mean_mapping_depth:
-    output: 'data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.prodigal.gene_depth.tsv'
+    output:
+        "data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.prodigal.gene_depth.tsv",
     input:
         script="scripts/calculate_gene_mean_mapping_depth.sh",
         gff="data/group/{group}/r.proc.megahit-full-k111.prodigal.gff",
