@@ -84,7 +84,7 @@ rule quality_asses_assembly_against_one_ref:
 
 rule combine_reference_genomes:
     output:
-        "data/group/{group}/all_refs.fn"
+        "data/group/{group}/all_refs.fn",
     input:
         refs=lambda w: [
             f"data/genome/{genome}.fn" for genome in config["genome_group"][w.group]
@@ -93,33 +93,36 @@ rule combine_reference_genomes:
     shell:
         "cat {input} > {output}"
 
+
 # NOTE (2024-11-20): This is one example of a benchmark_sequences files. I could also do
 # other things like 16S or arbitrary fragments.
 rule combine_reference_cds_as_benchmark_sequences:
     output:
-        "data/group/{group}/all_ref_cds.benchmark_sequences.fn"
+        "data/group/{group}/all_ref_cds.benchmark_sequences.fn",
     input:
         refs=lambda w: [
-            f"data/genome/{genome}.cds.fn" for genome in config["genome_group"][w.group]
+            f"data/genome/{genome}.cds.fn"
+            for genome in config["genome_group"][w.group]
         ],
     shell:
         "cat {input} > {output}"
 
 
-
 rule combine_reference_tiles_as_benchmark_sequences:
     output:
-        "data/group/{group}/all_ref_tiles-k{ksize}-o{overlap}.benchmark_sequences.fn"
+        "data/group/{group}/all_ref_tiles-k{ksize}-o{overlap}.benchmark_sequences.fn",
     input:
         refs=lambda w: [
-            f"data/genome/{genome}.norm.tiles-k{w.ksize}-o{w.overlap}.fn" for genome in config["genome_group"][w.group]
+            f"data/genome/{genome}.norm.tiles-k{w.ksize}-o{w.overlap}.fn"
+            for genome in config["genome_group"][w.group]
         ],
     shell:
         "cat {input} > {output}"
 
 
 rule blastn_to_benchmark_sequences:
-    output: "data/group/{group}/{stem}.bench-{benchmark_name}-blastn.tsv"
+    output:
+        "data/group/{group}/{stem}.bench-{benchmark_name}-blastn.tsv",
     input:
         query="data/group/{group}/{benchmark_name}.benchmark_sequences.fn",
         subject="data/group/{group}/{stem}.fn",

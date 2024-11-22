@@ -48,6 +48,7 @@ rule bowtie2_map_reads_to_megahit_assembly:
         mv $tmp {output}
         """
 
+
 rule tally_position_depth_from_bam:
     output:
         pos_depth="data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.position_depth.tsv",
@@ -70,6 +71,7 @@ rule calculate_gene_mean_mapping_depth:
         {input.script} {input.gff} {input.pos_depth} > {output}
         """
 
+
 rule mean_depth_by_contig:
     output:
         "data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.contig_depth.tsv",
@@ -87,8 +89,10 @@ rule mean_depth_by_contig:
             | sed '1,1d' > {output}
         """
 
+
 rule combine_gene_depth_across_group_samples:
-    output: "data/group/{group}/r.proc.megahit-full-k111.prodigal.gene_depth.tsv"
+    output:
+        "data/group/{group}/r.proc.megahit-full-k111.prodigal.gene_depth.tsv",
     input:
         lambda w: [
             f"data/group/{w.group}/reads/{mgen}/r.proc.megahit-full-k111.prodigal.gene_depth.tsv"
@@ -96,7 +100,7 @@ rule combine_gene_depth_across_group_samples:
         ],
     params:
         mgen_list=lambda w: config["mgen_group"][w.group],
-        pattern="data/group/{group}/reads/$sample/r.proc.megahit-full-k111.prodigal.gene_depth.tsv"
+        pattern="data/group/{group}/reads/$sample/r.proc.megahit-full-k111.prodigal.gene_depth.tsv",
     shell:
         """
         for sample in {params.mgen_list}
@@ -107,8 +111,10 @@ rule combine_gene_depth_across_group_samples:
         done > {output}
         """
 
+
 rule combine_contig_depth_across_group_samples:
-    output: "data/group/{group}/r.proc.megahit-full-k111.contig_depth.tsv"
+    output:
+        "data/group/{group}/r.proc.megahit-full-k111.contig_depth.tsv",
     input:
         lambda w: [
             f"data/group/{w.group}/reads/{mgen}/r.proc.megahit-full-k111.contig_depth.tsv"
@@ -116,7 +122,7 @@ rule combine_contig_depth_across_group_samples:
         ],
     params:
         mgen_list=lambda w: config["mgen_group"][w.group],
-        pattern="data/group/{group}/reads/$sample/r.proc.megahit-full-k111.contig_depth.tsv"
+        pattern="data/group/{group}/reads/$sample/r.proc.megahit-full-k111.contig_depth.tsv",
     shell:
         """
         for sample in {params.mgen_list}
