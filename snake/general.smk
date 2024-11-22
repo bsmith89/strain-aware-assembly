@@ -36,11 +36,12 @@ rule convert_prodigal_gff_to_bed:
         )
 
 
+# NOTE (2024-11-19): Renamed output to avoid conflicts with other ways of getting BED files.
 # Trivial conversion of lengths into a BED file format describing the
 # full span of contigs as a feature.
 rule nlength_to_bed:
     output:
-        "{stem}.bed",
+        "{stem}.nlength.bed",
     input:
         "{stem}.nlength.tsv",
     shell:
