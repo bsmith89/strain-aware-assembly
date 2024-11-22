@@ -1,0 +1,9 @@
+community_id	genome_id	fraction
+btheta_strainA	Bacteroides-thetaiotaomicron-1-1-6_MAF-2	1
+btheta_strainB	Bacteroides-thetaiotaomicron-VPI-5482_MAF-2	1
+btheta_mixture_50_50	Bacteroides-thetaiotaomicron-1-1-6_MAF-2	0.5
+btheta_mixture_50_50	Bacteroides-thetaiotaomicron-VPI-5482_MAF-2	0.5
+btheta_mixture_25_75	Bacteroides-thetaiotaomicron-1-1-6_MAF-2	0.25
+btheta_mixture_25_75	Bacteroides-thetaiotaomicron-VPI-5482_MAF-2	0.75
+btheta_mixture_75_25	Bacteroides-thetaiotaomicron-1-1-6_MAF-2	0.75
+btheta_mixture_75_25	Bacteroides-thetaiotaomicron-VPI-5482_MAF-2	0.25

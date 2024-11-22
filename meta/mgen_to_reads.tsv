@@ -1,10 +1,24 @@
 mgen_id	preprocessing	sra_accession	r1_path	r2_path
 Bacteroides-thetaiotaomicron-1-1-6_MAF-2_wgs_reads	dedup.deadapt.qtrim	SRR24651254	raw/sra/SRR24651254_1.fq.gz	raw/sra/SRR24651254_2.fq.gz
 Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_wgs_reads	dedup.deadapt.qtrim	SRR24651305	raw/sra/SRR24651305_1.fq.gz	raw/sra/SRR24651305_2.fq.gz
-Bacteroides-thetaiotaomicron-1-1-6_MAF-2_sim_len150_seed0_cov10	dedup.deadapt.qtrim		
-Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_sim_len150_seed0_cov10	dedup.deadapt.qtrim		
-Bacteroides-thetaiotaomicron-1-1-6_MAF-2_tiles_k111	noop			
-Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_tiles_k111	noop			
+Bacteroides-thetaiotaomicron-1-1-6_MAF-2_sim_len150_seed0_cov1000	sim.dedup.deadapt.qtrim			
+Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_sim_len150_seed0_cov1000	sim.dedup.deadapt.qtrim			
+Bacteroides-thetaiotaomicron-1-1-6_MAF-2_sim_len150_seed0_cov10000	sim.qtrim			
+Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_sim_len150_seed0_cov10000	sim.qtrim			
+Bacteroides-thetaiotaomicron-1-1-6_MAF-2_tiles_k111	tiles.noop			
+Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_tiles_k111	tiles.noop			
+btheta_strainA_simcom_len150_seed0_cov10000	sim			
+btheta_strainB_simcom_len150_seed0_cov10000	sim			
+btheta_mixture_50_50_simcom_len150_seed1_cov10000	sim			
+btheta_mixture_25_75_simcom_len150_seed2_cov10000	sim			
+btheta_mixture_75_25_simcom_len150_seed3_cov10000	sim			
+btheta_mixture_25_75_simcom_len150_seed4_cov10000	sim			
+btheta_mixture_75_25_simcom_len150_seed5_cov10000	sim			
+btheta_strainA_simcom_len150_seed0_cov1000	sim			
+btheta_strainB_simcom_len150_seed0_cov1000	sim			
+btheta_mixture_50_50_simcom_len150_seed1_cov1000	sim			
+btheta_mixture_25_75_simcom_len150_seed2_cov1000	sim			
+btheta_mixture_75_25_simcom_len150_seed3_cov1000	sim			
 watson_DB_R04_CDI_P_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712816	raw/sra/SRR13712816_1.fq.gz	raw/sra/SRR13712816_2.fq.gz
 watson_DB_R04_CDI_P_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712817	raw/sra/SRR13712817_1.fq.gz	raw/sra/SRR13712817_2.fq.gz
 watson_DB_R03_CDI_P_08_POST	hfilt.dedup.deadapt.qtrim	SRR13712818	raw/sra/SRR13712818_1.fq.gz	raw/sra/SRR13712818_2.fq.gz

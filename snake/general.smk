@@ -28,9 +28,9 @@ rule convert_prodigal_gff_to_bed:
         cat {input} \
                 | awk -v OFS='\t' \
                         '/^#/ {{}} \
-                         !/^#/ {{seq[$1]++; print $1, $4 - 1, $5, $1"_"seq[$1], 0, $7}} \
+                         !/^#/ {{left=($4 - 1); print $1, left, $5, $1"["left"-"$5"]"$7, 0, $7}} \
                          ' \
-                | sort -k1,1n -k2,2n \
+                | sort -k1,1 -k2,2n \
             > {output}
         """
         )
@@ -55,7 +55,7 @@ rule fetch_prodigal_cds:
     output:
         "{stem}.cds.fn",
     input:
-        bed="{stem}.prodigal.bed",
+        bed="{stem}.prodigal.bed",  # NOTE (2024-11-19): We use BED here (instead of the original GFF) because it allows us to name the features easily.
         fn="{stem}.fn",
         fai="{stem}.fn.fai",
     shell:
@@ -77,7 +77,7 @@ rule translate_nucleotide_to_protein:
         dd(
             r"""
         cat {input} \
-                | transeq -auto -filter -sformat1 fasta -table 11 -frame 1 -trim -stdout \
+                | transeq -auto -filter -sformat1 pearson -table 11 -frame 1 -trim -stdout \
                 | sed 's:\(^>.*\)_1$:\1:' \
                 | sed 's:\*:x:g' \
             > {output}

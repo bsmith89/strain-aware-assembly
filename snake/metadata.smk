@@ -23,3 +23,5 @@ _genome_group = pd.read_table(
 )
 for genome_group_id, d in _genome_group.groupby('genome_group_id'):
     config["genome_group"][genome_group_id] = list(d.genome_id)
+
+config["simulated_community"] = pd.read_table("meta/simulated_community.tsv")

@@ -76,7 +76,7 @@ rule alias_genbank_genome:
         alias_recipe
 
 
-rule link_project_reference_genome_no_species:
+rule standardize_contig_naming_project_reference_genome:
     output:
         "data/genome/{genome}.fn",
     input:
@@ -84,7 +84,7 @@ rule link_project_reference_genome_no_species:
     wildcard_constraints:
         genome=noperiod_wc,
     shell:
-        alias_recipe
+        "sed '/>/s:>\(.*\):>{wildcards.genome}_\\1:' {input} > {output}"
 
 
 rule normalize_genome_sequence:
@@ -111,6 +111,22 @@ rule tile_reference_genome:
     shell:
         "{input.script} {params.length} {params.overlap} {input.fn} > {output}"
 
+rule tile_reference_genome2:
+    output:
+        "{stem}.tiles-k{ksize}-o{overlap}.fn",
+    input:
+        script="scripts/tile_fasta.py",
+        fn="{stem}.fn",
+    wildcard_constraints:
+        genome=noperiod_wc,
+        ksize=integer_wc,
+        overlap=integer_wc,
+    params:
+        length=lambda w: int(w.ksize),
+        overlap=lambda w: int(w.overlap),
+    shell:
+        "{input.script} {params.length} {params.overlap} {input.fn} > {output}"
+
 
 rule genome_fasta_to_fastq:
     """
@@ -132,10 +148,10 @@ rule genome_fasta_to_fastq:
 
 rule alias_tiled_genome_as_reads:
     output:
-        r1="data/reads/{genome}_tiles_k{ksize}/r1.proc.fq.gz",
-        r2="data/reads/{genome}_tiles_k{ksize}/r2.proc.fq.gz",
+        r1="data/reads/{genome}_tiles_k{ksize}/r1.tiles.fq.gz",
+        r2="data/reads/{genome}_tiles_k{ksize}/r2.tiles.fq.gz",
     input:
-        tiles="data/genome/{genome}.norm.tiles-k{ksize}.fq.gz"
+        tiles="data/genome/{genome}.norm.tiles-k{ksize}.fq.gz",
     shell:
         """
         ln -rs {input.tiles} {output.r1}
@@ -148,11 +164,12 @@ ruleorder: alias_tiled_genome_as_reads > alias_cleaned_reads
 
 rule simulate_wgs_reads:
     output:
-        r1="data/reads/{genome}_sim_len150_seed{seed}_cov{cov}/r1.fq.gz",
-        r2="data/reads/{genome}_sim_len150_seed{seed}_cov{cov}/r2.fq.gz",
+        r1="data/reads/{genome}_sim_len150_seed{seed}_cov{cov}/r1.sim.fq.gz",
+        r2="data/reads/{genome}_sim_len150_seed{seed}_cov{cov}/r2.sim.fq.gz",
     input:
         fasta="data/genome/{genome}.fn",
     params:
+        coverage=lambda w: int(w.cov) / 100,
         outdir="data/reads/{genome}_sim_len150_seed{seed}_cov{cov}",
     conda:
         "conda/art_read_sim.yaml"
@@ -161,11 +178,43 @@ rule simulate_wgs_reads:
         art_illumina --rndSeed {wildcards.seed} \
                 --seqSys HS25 \
                 --len 150 --paired --mflen 450 --sdev 30 \
-                --fcov {wildcards.cov} \
+                --fcov {params.coverage} \
                 --noALN \
                 --in {input.fasta} --out {params.outdir}/
         gzip -c {params.outdir}/1.fq > {output.r1} && rm {params.outdir}/1.fq
         gzip -c {params.outdir}/2.fq > {output.r2} && rm {params.outdir}/2.fq
+        """
+
+
+rule combine_community_wgs_reads:
+    output:
+        r1="data/reads/{community}_simcom_len150_seed{seed}_cov{cov}/r1.sim.fq.gz",
+        r2="data/reads/{community}_simcom_len150_seed{seed}_cov{cov}/r2.sim.fq.gz",
+    input:
+        r1=lambda w: [
+            "data/reads/{genome}_sim_len150_seed{seed}_cov{cov}/r1.sim.fq.gz".format(
+                genome=sim_genome.genome_id,
+                seed=w.seed,
+                cov=int(int(w.cov) * sim_genome.fraction),
+            )
+            for _, sim_genome in config["simulated_community"][
+                lambda x: x.community_id == w.community
+            ].iterrows()
+        ],
+        r2=lambda w: [
+            "data/reads/{genome}_sim_len150_seed{seed}_cov{cov}/r2.sim.fq.gz".format(
+                genome=sim_genome.genome_id,
+                seed=w.seed,
+                cov=int(int(w.cov) * sim_genome.fraction),  # NOTE (2024-11-19): Metadata has coverage in correct units. Filenames for this and single genomes are 100x.
+            )
+            for _, sim_genome in config["simulated_community"][
+                lambda x: x.community_id == w.community
+            ].iterrows()
+        ],
+    shell:
+        """
+        cat {input.r1} > {output.r1}
+        cat {input.r2} > {output.r2}
         """
 
 
@@ -601,7 +650,7 @@ rule run_ggcat_on_kmtricks_kmers_and_include_megahit_contigs:
             f"{w.stem}.kmtricks-k{w.ksize}-m{w.mincount}-r{w.recurrence}.d/matrices/matrix_{part}.count.txt"
             for part in range(32)
         ],
-        contigs="{stem}.megahit-full-k{ksize}.fn",
+        contigs="{stem}.megahit-full-k{ksize}-unfiltered.fn",
     container:
         config["container"]["ggcat"]
     threads: 48
@@ -704,7 +753,7 @@ rule run_ggcat_on_reads_and_include_megahit_contigs:
             f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
             for mgen in config["mgen_group"][w.group]
         ],
-        contigs="data/group/{group}/r.{stem}.megahit-full-k{ksize}.fn",
+        contigs="data/group/{group}/r.{stem}.megahit-full-k{ksize}-unfiltered.fn",
     container:
         config["container"]["ggcat"]
     threads: 48
@@ -733,7 +782,7 @@ rule run_ggcat_on_reads_and_include_megahit_contigs_twice:
             f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
             for mgen in config["mgen_group"][w.group]
         ],
-        contigs="data/group/{group}/r.{stem}.megahit-full-k{ksize}.fn",
+        contigs="data/group/{group}/r.{stem}.megahit-full-k{ksize}-unfiltered.fn",
     container:
         config["container"]["ggcat"]
     threads: 48
@@ -763,7 +812,7 @@ rule run_ggcat_on_reads_and_include_megahit_contigs_min3:
             f"data/reads/{mgen}/r2.{w.stem}.fq.gz"
             for mgen in config["mgen_group"][w.group]
         ],
-        contigs="data/group/{group}/r.{stem}.megahit-full-k{ksize}.fn",
+        contigs="data/group/{group}/r.{stem}.megahit-full-k{ksize}-unfiltered.fn",
     container:
         config["container"]["ggcat"]
     threads: 48
@@ -870,11 +919,12 @@ rule calculate_mean_unitig_depths_across_samples_from_kmc_one_step:
 #         strainzip load --verbose {wildcards.ksize} {input.fasta} {output}
 #         """
 
+
 rule load_ggcat_with_kmc_depths_to_sz:
     output:
         "{stem}.ggcat-k{ksize}-{unitig_source}.sz",
     wildcard_constraints:
-        unitig_source=single_param_wc,
+        unitig_source=noperiod_wc,
         ksize=integer_wc,
     input:
         fasta="{stem}.ggcat-k{ksize}-{unitig_source}.fn",
@@ -1015,7 +1065,7 @@ rule unzip_safe_only_junctions:
             "t5": "StudentsT --model-hyperparameters df=5",
             "huber": "Huber --model-hyperparameters delta=1",
         }[w.model],
-        min_depth=0.001,
+        min_depth=1.0,
         score_thresh=lambda w: float(w.thresh),
         relative_error_thresh=0.1,
         absolute_error_thresh=1.0,
@@ -1071,7 +1121,7 @@ rule unzip_junctions:
             "t5": "StudentsT --model-hyperparameters df=5",
             "huber": "Huber --model-hyperparameters delta=1",
         }[w.model],
-        min_depth=0.001,
+        min_depth=1.0,
         score_thresh=lambda w: float(w.thresh),
         relative_error_thresh=0.1,
         absolute_error_thresh=1.0,
@@ -1125,7 +1175,7 @@ rule unzip_junctions_no_balancing:
             "t5": "StudentsT --model-hyperparameters df=5",
             "huber": "Huber --model-hyperparameters delta=1",
         }[w.model],
-        min_depth=0.001,
+        min_depth=1.0,
         score_thresh=lambda w: float(w.thresh),
         relative_error_thresh=0.1,
         absolute_error_thresh=1.0,
@@ -1149,6 +1199,63 @@ rule unzip_junctions_no_balancing:
 
         strainzip unzip --verbose -p {threads} \
                 --min-depth {params.min_depth} \
+                --skip-extra-large --max-rounds {params.max_rounds} --model {params.model} \
+                --score aic --score-thresh {params.score_thresh} \
+                --no-balance \
+                --relative-error-thresh {params.relative_error_thresh} \
+                --absolute-error-thresh {params.absolute_error_thresh} \
+                --excess-thresh {params.excess_thresh} \
+                --completeness-thresh {params.completeness_thresh} \
+                --checkpoint-dir {log.checkpoint_dir} \
+                {input} {output.final}
+        """
+
+
+rule unzip_junctions_no_balancing_no_low_depth:
+    output:
+        final="{stem}.unzip-{model}-nobal-nocull-{thresh}-{rounds}.sz",
+    wildcard_constraints:
+        model=single_param_wc,
+        thresh=single_param_wc,
+        rounds=single_param_wc,
+    input:
+        "{stem}.sz",
+    log:
+        checkpoint_dir=directory(
+            "{stem}.unzip-{model}-nobal-nocull-{thresh}-{rounds}.checkpoints.d"
+        ),
+    params:
+        model=lambda w: {
+            "lognorm2": "OffsetLogNormal",
+            "norm": "Normal --model-hyperparameters tol=1e-4",
+            "normscaled": "NormalScaled --model-hyperparameters alpha=0.5",
+            "lapl": "Laplace",
+            "t5": "StudentsT --model-hyperparameters df=5",
+            "huber": "Huber --model-hyperparameters delta=1",
+        }[w.model],
+        score_thresh=lambda w: float(w.thresh),
+        relative_error_thresh=0.1,
+        absolute_error_thresh=1.0,
+        max_rounds=lambda w: int(w.rounds),
+        excess_thresh=0,
+        completeness_thresh=1,
+    conda:
+        "conda/strainzip.yaml"
+    threads: 48
+    shell:
+        """
+        # FIXME: Figure out why setting environmental variables here is necessary.
+        export XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1 --xla_force_host_platform_device_count=8"
+        export OPENBLAS_NUM_THREADS=1
+        export MKL_NUM_THREADS=1
+        export OMP_NUM_THREAD=1
+        export NUM_INTER_THREADS=1
+        export NUM_INTRA_THREADS=1
+
+        mkdir -p {log.checkpoint_dir}
+
+        strainzip unzip --verbose -p {threads} \
+                --no-drop-low-depth \
                 --skip-extra-large --max-rounds {params.max_rounds} --model {params.model} \
                 --score aic --score-thresh {params.score_thresh} \
                 --no-balance \
@@ -1316,6 +1423,22 @@ rule dump_assembly_contigs:
     shell:
         "strainzip dump_contigs --verbose {input.graph} {input.fasta} {output.fasta}"
 
+rule dump_assembly_contigs_cull_and_no_derep:
+    output:
+        fasta="{stemA}.ggcat-{unitig_source}.{stemB}.contigs-d{min_depth}.fn",
+    wildcard_constraints:
+        unitig_source=noperiod_wc,
+        min_depth=integer_wc,
+    input:
+        graph="{stemA}.ggcat-{unitig_source}.{stemB}.sz",
+        fasta="{stemA}.ggcat-{unitig_source}.fn",
+    params:
+        min_depth=lambda w: int(w.min_depth) / 100
+    conda:
+        "conda/strainzip.yaml"
+    shell:
+        "strainzip dump_contigs --verbose --min-depth {params.min_depth} --no-derep {input.graph} {input.fasta} {output.fasta}"
+
 
 rule dump_assembly_segments:
     output:
@@ -1403,6 +1526,7 @@ rule megahit_assemble_k_series:
     output:
         dir=directory("data/group/{group}/r.{stem}.megahit-full-k{ksize}.d"),
         fasta="data/group/{group}/r.{stem}.megahit-full-k{ksize}.fn",
+        fasta_unfiltered="data/group/{group}/r.{stem}.megahit-full-k{ksize}-unfiltered.fn",
     wildcard_constraints:
         ksize=integer_wc,
     input:
@@ -1438,6 +1562,7 @@ rule megahit_assemble_k_series:
         megahit -t {threads} --k-min {params.kmin} --k-max {params.kmax} --k-step {params.kstep} \
                 {resources.memory_flags} -o {output.dir} -1 {params.r1} -2 {params.r2}
         ln {output.dir}/final.contigs.fa {output.fasta}
+        ln {output.dir}/intermediate_contigs/k{params.kmax}.contigs.fa {output.fasta_unfiltered}
         """
 
 

@@ -46,27 +46,80 @@ rule bowtie2_map_reads_to_megahit_assembly:
         mv $tmp {output}
         """
 
-
-rule count_mapping_depth_along_contigs:
-    output: 'data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.position_depth.tsv'
+rule tally_position_depth_from_bam:
+    output:
+        pos_depth="data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.position_depth.tsv",
     input:
         bam="data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.bam",
-    conda: "conda/bowtie2.yaml"
-    threads: 1
     shell:
-        """
-        samtools depth --threads {threads} {input.bam} > {output}
-        """
+        "samtools depth -a -s {input.bam} > {output}"
 
 
 rule calculate_gene_mean_mapping_depth:
     output: 'data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.prodigal.gene_depth.tsv'
     input:
-        script="scripts/calculate_gene_mean_mapping_depth.py",
+        script="scripts/calculate_gene_mean_mapping_depth.sh",
         gff="data/group/{group}/r.proc.megahit-full-k111.prodigal.gff",
         pos_depth="data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.position_depth.tsv",
     threads: 1
     shell:
         """
-        {input.script} {input.gff} {input.pos_depth} {output}
+        {input.script} {input.gff} {input.pos_depth} > {output}
+        """
+
+rule mean_depth_by_contig:
+    output:
+        "data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.contig_depth.tsv",
+    input:
+        pos_depth="data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.position_depth.tsv",
+    threads: 1
+    shell:
+        """
+            cat {input.pos_depth} | awk -v OFS='\t' '\\
+                BEGIN {{gene_id="__START__"; depth_tally=0; pos_tally=0}} \\
+                $1==gene_id {{depth_tally+=$3; pos_tally+=1}} \\
+                $1!=gene_id {{print gene_id, 1.0 * depth_tally / pos_tally; gene_id=$1; depth_tally=0; pos_tally=0}} \\
+                END {{print gene_id, 1.0 * depth_tally / pos_tally}} \\
+                ' \
+            | sed '1,1d' > {output}
+        """
+
+rule combine_gene_depth_across_group_samples:
+    output: "data/group/{group}/r.proc.megahit-full-k111.prodigal.gene_depth.tsv"
+    input:
+        lambda w: [
+            f"data/group/{w.group}/reads/{mgen}/r.proc.megahit-full-k111.prodigal.gene_depth.tsv"
+            for mgen in config["mgen_group"][w.group]
+        ],
+    params:
+        mgen_list=lambda w: config["mgen_group"][w.group],
+        pattern="data/group/{group}/reads/$sample/r.proc.megahit-full-k111.prodigal.gene_depth.tsv"
+    shell:
+        """
+        for sample in {params.mgen_list}
+        do
+            sample_depth={params.pattern}
+            echo $sample >&2
+            awk -v OFS='\t' -v sample=$sample '{{print sample,$1,$2}}' $sample_depth
+        done > {output}
+        """
+
+rule combine_contig_depth_across_group_samples:
+    output: "data/group/{group}/r.proc.megahit-full-k111.contig_depth.tsv"
+    input:
+        lambda w: [
+            f"data/group/{w.group}/reads/{mgen}/r.proc.megahit-full-k111.contig_depth.tsv"
+            for mgen in config["mgen_group"][w.group]
+        ],
+    params:
+        mgen_list=lambda w: config["mgen_group"][w.group],
+        pattern="data/group/{group}/reads/$sample/r.proc.megahit-full-k111.contig_depth.tsv"
+    shell:
+        """
+        for sample in {params.mgen_list}
+        do
+            sample_depth={params.pattern}
+            echo $sample >&2
+            awk -v OFS='\t' -v sample=$sample '{{print sample,$1,$2}}' $sample_depth
+        done > {output}
         """

@@ -1,4 +1,10 @@
 genome_id	genome_group_id
+Bacteroides-thetaiotaomicron-1-1-6_MAF-2	btheta_mixture1_cov10000
+Bacteroides-thetaiotaomicron-VPI-5482_MAF-2	btheta_mixture1_cov10000
+Bacteroides-thetaiotaomicron-1-1-6_MAF-2	btheta_mixture1_nopure
+Bacteroides-thetaiotaomicron-VPI-5482_MAF-2	btheta_mixture1_nopure
+Bacteroides-thetaiotaomicron-1-1-6_MAF-2	btheta_mixture1_cov1000
+Bacteroides-thetaiotaomicron-VPI-5482_MAF-2	btheta_mixture1_cov1000
 Bacteroides-thetaiotaomicron-1-1-6_MAF-2	btheta_2strains
 Bacteroides-thetaiotaomicron-VPI-5482_MAF-2	btheta_2strains
 Bacteroides-thetaiotaomicron-1-1-6_MAF-2	btheta_2strains_tiles_k111
