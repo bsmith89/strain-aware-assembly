@@ -5,7 +5,7 @@ latency-wait: 180
 max-jobs-per-second: 10
 keep-going: true
 printshellcmds: true
-resources: 'network_connections=3'
+resources: ['network_connections=3']
 default-resources:
   - 'pmem=8192'
   - 'disk_mb=100000'
@@ -16,13 +16,13 @@ default-resources:
   - 'device="cpu"'
 use-conda: true
 conda-frontend: 'mamba'
-use-singularity: true
-singularity-args: >-
+use-apptainer: true
+apptainer-args: >-
   --env CONDA_PKGS_DIRS=$HOME/.snakemake/conda/pkgs
   --bind $TMPDIR
+  --bind /pollard
   --bind $PWD/include:/include
   --bind /salilab/diva1/home/anaconda/anaconda3
-  --bind /pollard
   --bind /wynton
   --bind /scratch
 jobscript: 'profiles/wynton-qsub/jobscript.sh'

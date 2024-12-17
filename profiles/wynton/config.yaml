@@ -5,13 +5,13 @@ keep-going: true
 resources: ['network_connections=3', 'mem_mb=500000']
 use-conda: true
 conda-frontend: 'mamba'
-use-singularity: true
-singularity-args: >-
+use-apptainer: true
+apptainer-args: >-
   --env CONDA_PKGS_DIRS=$HOME/.snakemake/conda/pkgs
   --bind $TMPDIR
+  --bind /pollard
   --bind $PWD/include:/include
   --bind /salilab/diva1/home/anaconda/anaconda3
-  --bind /pollard
   --bind /wynton
   --bind /scratch
 config:

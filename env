@@ -10,9 +10,9 @@ fi
 # Set default profile name to default if not already set.
 # (Setting this environmental variable in e.g. ~/.bashrc allows me to
 # differentiate my systems.)
-: ${DEFAULT_SNAKEMAKE_PROFILE:=default}
+: ${DEFAULT_SNAKEMAKE_PROFILE:=base}
 
-`snakemake --bash-completion`  # Should be: complete -o bashdefault -C snakemake-bash-completion snakemake
+# `snakemake --bash-completion`  # Should be: complete -o bashdefault -C snakemake-bash-completion snakemake
 
 # Aliases for each profile
 for dir in `ls -d ${PROJECT_ROOT}/profiles/*/`
