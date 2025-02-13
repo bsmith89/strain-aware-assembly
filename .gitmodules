@@ -4,3 +4,6 @@
 [submodule "include/kmc"]
 	path = include/kmc
 	url = https://github.com/refresh-bio/kmc.git
+[submodule "include/compbio-scripts"]
+	path = include/compbio-scripts
+	url = git@github.com:bsmith89/compbio-scripts.git

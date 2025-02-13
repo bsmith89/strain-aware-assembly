@@ -1,0 +1,10 @@
+name: compbio_scripts
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - Biopython==1.77
+  - jupyter
+  - pip
+  - pip:
+     - -e /include/compbio-scripts
