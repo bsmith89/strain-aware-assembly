@@ -27,7 +27,7 @@ import snakemake.utils
 
 # {{{2 General Configuration
 
-snakemake.utils.min_version("6.7")
+snakemake.utils.min_version("8.25")
 
 
 config = nested_defaultdict()
@@ -45,6 +45,9 @@ if path.exists(local_config_path):
 if "container" in config:
 
     container: config["container"]["default"]
+
+
+config['PROJECT_ROOT'] = os.path.realpath('.')
 
 
 # {{{2 Sub-pipelines

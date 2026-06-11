@@ -52,3 +52,11 @@ rule link_processed_ucfmt_d97_data:
 
 
 ruleorder: link_processed_ucfmt_d97_data > alias_cleaned_reads
+
+rule link_eggnog_mapper_db:
+    output:
+        directory("ref/eggnog_mapper_db"),
+    input:
+        ancient("/pollard/scratch/vdubinki/eggnog_mapper_data"),
+    shell:
+        alias_recipe_norelative

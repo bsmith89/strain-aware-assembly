@@ -6,9 +6,10 @@ max-jobs-per-second: 10
 keep-going: true
 printshellcmds: true
 resources: ['network_connections=3']
+scheduler: "greedy"
 default-resources:
   - 'pmem=8192'
-  - 'disk_mb=100000'
+  - 'scratch_mb=100000'
   - 'walltime_hr=0'
   - 'walltime_min=29'
   - 'walltime_sec=59'
@@ -19,23 +20,25 @@ conda-frontend: 'mamba'
 use-apptainer: true
 apptainer-args: >-
   --env CONDA_PKGS_DIRS=$HOME/.snakemake/conda/pkgs
-  --bind $TMPDIR
   --bind /pollard
   --bind $PWD/include:/include
   --bind /salilab/diva1/home/anaconda/anaconda3
   --bind /wynton
   --bind /scratch
+  --bind /tmp
 jobscript: 'profiles/wynton-qsub/jobscript.sh'
-cluster: "qsub -cwd \
+executor: "cluster-generic"
+cluster-generic-submit-cmd: "qsub -cwd \
         -v PATH \
         -pe smp {threads} \
         -l h_rt={resources.walltime_hr}:{resources.walltime_min}:{resources.walltime_sec} \
         -l mem_free={resources.pmem}M \
+        -l scratch={resources.scratch_mb}M \
         -j yes \
         -terse \
         -o {resources.outdir} \
         "
-cluster-cancel: '/opt/sge/bin/lx-amd64/qdel'
+cluster-generic-cancel-cmd: '/opt/sge/bin/lx-amd64/qdel'
 jobname: '{name}.{jobid}.snkjb'
 config:
   - 'USE_CUDA=0'

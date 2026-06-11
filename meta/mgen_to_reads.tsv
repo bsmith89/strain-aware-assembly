@@ -1,4 +1,28 @@
 mgen_id	preprocessing	sra_accession	r1_path	r2_path
+K12D11_R1	noop	SRR13900338	raw/sra/SRR13900338_1.fq.gz	raw/sra/SRR13900338_2.fq.gz
+K20D85_R1	noop	SRR13900339	raw/sra/SRR13900339_1.fq.gz	raw/sra/SRR13900339_2.fq.gz
+K20D81_R1	noop	SRR13900340	raw/sra/SRR13900340_1.fq.gz	raw/sra/SRR13900340_2.fq.gz
+K20D79_R1	noop	SRR13900341	raw/sra/SRR13900341_1.fq.gz	raw/sra/SRR13900341_2.fq.gz
+K12D09_R1	noop	SRR13900342	raw/sra/SRR13900342_1.fq.gz	raw/sra/SRR13900342_2.fq.gz
+K20D83_R1	noop	SRR13900343	raw/sra/SRR13900343_1.fq.gz	raw/sra/SRR13900343_2.fq.gz
+K20D77_R1	noop	SRR13900344	raw/sra/SRR13900344_1.fq.gz	raw/sra/SRR13900344_2.fq.gz
+K20D75_R1	noop	SRR13900345	raw/sra/SRR13900345_1.fq.gz	raw/sra/SRR13900345_2.fq.gz
+K19D33_R1	noop	SRR13900346	raw/sra/SRR13900346_1.fq.gz	raw/sra/SRR13900346_2.fq.gz
+K19D31_R1	noop	SRR13900347	raw/sra/SRR13900347_1.fq.gz	raw/sra/SRR13900347_2.fq.gz
+K19D29_R1	noop	SRR13900348	raw/sra/SRR13900348_1.fq.gz	raw/sra/SRR13900348_2.fq.gz
+K19D25_R1	noop	SRR13900349	raw/sra/SRR13900349_1.fq.gz	raw/sra/SRR13900349_2.fq.gz
+K19D27_R1	noop	SRR13900350	raw/sra/SRR13900350_1.fq.gz	raw/sra/SRR13900350_2.fq.gz
+K19D23_R1	noop	SRR13900351	raw/sra/SRR13900351_1.fq.gz	raw/sra/SRR13900351_2.fq.gz
+K12D06_R1	noop	SRR13900352	raw/sra/SRR13900352_1.fq.gz	raw/sra/SRR13900352_2.fq.gz
+K18D57_R1	noop	SRR13900353	raw/sra/SRR13900353_1.fq.gz	raw/sra/SRR13900353_2.fq.gz
+K18D53_R1	noop	SRR13900354	raw/sra/SRR13900354_1.fq.gz	raw/sra/SRR13900354_2.fq.gz
+K18D55_R1	noop	SRR13900355	raw/sra/SRR13900355_1.fq.gz	raw/sra/SRR13900355_2.fq.gz
+K18D51_R1	noop	SRR13900356	raw/sra/SRR13900356_1.fq.gz	raw/sra/SRR13900356_2.fq.gz
+K18D49_R1	noop	SRR13900357	raw/sra/SRR13900357_1.fq.gz	raw/sra/SRR13900357_2.fq.gz
+K12D13_R1	noop	SRR13900358	raw/sra/SRR13900358_1.fq.gz	raw/sra/SRR13900358_2.fq.gz
+K18D47_R1	noop	SRR13900359	raw/sra/SRR13900359_1.fq.gz	raw/sra/SRR13900359_2.fq.gz
+K12D15_R1	noop	SRR13900360	raw/sra/SRR13900360_1.fq.gz	raw/sra/SRR13900360_2.fq.gz
+K12D04_R1	noop	SRR13900361	raw/sra/SRR13900361_1.fq.gz	raw/sra/SRR13900361_2.fq.gz
 Bacteroides-thetaiotaomicron-1-1-6_MAF-2_wgs_reads	dedup.deadapt.qtrim	SRR24651254	raw/sra/SRR24651254_1.fq.gz	raw/sra/SRR24651254_2.fq.gz
 Bacteroides-thetaiotaomicron-VPI-5482_MAF-2_wgs_reads	dedup.deadapt.qtrim	SRR24651305	raw/sra/SRR24651305_1.fq.gz	raw/sra/SRR24651305_2.fq.gz
 Bacteroides-thetaiotaomicron-1-1-6_MAF-2_sim_len150_seed0_cov1000	sim.dedup.deadapt.qtrim			
@@ -19,6 +43,16 @@ btheta_strainB_simcom_len150_seed0_cov1000	sim
 btheta_mixture_50_50_simcom_len150_seed1_cov1000	sim			
 btheta_mixture_25_75_simcom_len150_seed2_cov1000	sim			
 btheta_mixture_75_25_simcom_len150_seed3_cov1000	sim			
+ecoli_mg1655_simcom_len150_seed0_cov10000	sim			
+ecoli_o121h19_simcom_len150_seed0_cov10000	sim			
+ecoli_0157h7_simcom_len150_seed0_cov10000	sim			
+ecoli_14ec020_simcom_len150_seed0_cov10000	sim			
+ecoli_atcc11775_simcom_len150_seed0_cov10000	sim			
+ecoli_mg1655_dominated60_simcom_len150_seed1_cov10000	sim			
+ecoli_o121h19_dominated60_simcom_len150_seed2_cov10000	sim			
+ecoli_0157h7_dominated60_simcom_len150_seed3_cov10000	sim			
+ecoli_14ec020_dominated60_simcom_len150_seed4_cov10000	sim			
+ecoli_atcc11775_dominated60_simcom_len150_seed5_cov10000	sim			
 watson_DB_R04_CDI_P_02_PRE	hfilt.dedup.deadapt.qtrim	SRR13712816	raw/sra/SRR13712816_1.fq.gz	raw/sra/SRR13712816_2.fq.gz
 watson_DB_R04_CDI_P_01_PRE	hfilt.dedup.deadapt.qtrim	SRR13712817	raw/sra/SRR13712817_1.fq.gz	raw/sra/SRR13712817_2.fq.gz
 watson_DB_R03_CDI_P_08_POST	hfilt.dedup.deadapt.qtrim	SRR13712818	raw/sra/SRR13712818_1.fq.gz	raw/sra/SRR13712818_2.fq.gz

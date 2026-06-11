@@ -983,6 +983,60 @@ rule unzip_junctions_no_balancing:
                 {input} {output.final}
         """
 
+rule unzip_junctions_no_low_depth:
+    output:
+        final="{stem}.unzip-{model}-nocull-{thresh}-{rounds}.sz",
+    wildcard_constraints:
+        model=single_param_wc,
+        thresh=single_param_wc,
+        rounds=single_param_wc,
+    input:
+        "{stem}.sz",
+    log:
+        checkpoint_dir=directory(
+            "{stem}.unzip-{model}-nocull-{thresh}-{rounds}.checkpoints.d"
+        ),
+    params:
+        model=lambda w: {
+            "lognorm2": "OffsetLogNormal",
+            "norm": "Normal --model-hyperparameters tol=1e-4",
+            "normscaled": "NormalScaled --model-hyperparameters alpha=0.5",
+            "lapl": "Laplace",
+            "t5": "StudentsT --model-hyperparameters df=5",
+            "huber": "Huber --model-hyperparameters delta=1",
+        }[w.model],
+        score_thresh=lambda w: float(w.thresh),
+        relative_error_thresh=0.1,
+        absolute_error_thresh=1.0,
+        max_rounds=lambda w: int(w.rounds),
+        excess_thresh=0,
+        completeness_thresh=1,
+    conda:
+        "conda/strainzip.yaml"
+    threads: 48
+    shell:
+        """
+        # FIXME: Figure out why setting environmental variables here is necessary.
+        export XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1 --xla_force_host_platform_device_count=8"
+        export OPENBLAS_NUM_THREADS=1
+        export MKL_NUM_THREADS=1
+        export OMP_NUM_THREAD=1
+        export NUM_INTER_THREADS=1
+        export NUM_INTRA_THREADS=1
+
+        mkdir -p {log.checkpoint_dir}
+
+        strainzip unzip --verbose -p {threads} \
+                --no-drop-low-depth \
+                --skip-extra-large --max-rounds {params.max_rounds} --model {params.model} \
+                --score aic --score-thresh {params.score_thresh} \
+                --relative-error-thresh {params.relative_error_thresh} \
+                --absolute-error-thresh {params.absolute_error_thresh} \
+                --excess-thresh {params.excess_thresh} \
+                --completeness-thresh {params.completeness_thresh} \
+                --checkpoint-dir {log.checkpoint_dir} \
+                {input} {output.final}
+        """
 
 rule unzip_junctions_no_balancing_no_low_depth:
     output:
@@ -1040,6 +1094,61 @@ rule unzip_junctions_no_balancing_no_low_depth:
                 {input} {output.final}
         """
 
+rule unzip_junctions_no_balancing_no_low_depth_no_stderr_thresh:
+    output:
+        final="{stem}.unzip-{model}-nobal-nocull-noerr-{thresh}-{rounds}.sz",
+    wildcard_constraints:
+        model=single_param_wc,
+        thresh=single_param_wc,
+        rounds=single_param_wc,
+    input:
+        "{stem}.sz",
+    log:
+        checkpoint_dir=directory(
+            "{stem}.unzip-{model}-nobal-nocull-noerr-{thresh}-{rounds}.checkpoints.d"
+        ),
+    params:
+        model=lambda w: {
+            "lognorm2": "OffsetLogNormal",
+            "norm": "Normal --model-hyperparameters tol=1e-4",
+            "normscaled": "NormalScaled --model-hyperparameters alpha=0.5",
+            "lapl": "Laplace",
+            "t5": "StudentsT --model-hyperparameters df=5",
+            "huber": "Huber --model-hyperparameters delta=1",
+        }[w.model],
+        score_thresh=lambda w: float(w.thresh),
+        relative_error_thresh=100000000.0,
+        absolute_error_thresh=100000000.0,
+        max_rounds=lambda w: int(w.rounds),
+        excess_thresh=0,
+        completeness_thresh=1,
+    conda:
+        "conda/strainzip.yaml"
+    threads: 48
+    shell:
+        """
+        # FIXME: Figure out why setting environmental variables here is necessary.
+        export XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1 --xla_force_host_platform_device_count=8"
+        export OPENBLAS_NUM_THREADS=1
+        export MKL_NUM_THREADS=1
+        export OMP_NUM_THREAD=1
+        export NUM_INTER_THREADS=1
+        export NUM_INTRA_THREADS=1
+
+        mkdir -p {log.checkpoint_dir}
+
+        strainzip unzip --verbose -p {threads} \
+                --no-drop-low-depth \
+                --skip-extra-large --max-rounds {params.max_rounds} --model {params.model} \
+                --score aic --score-thresh {params.score_thresh} \
+                --no-balance \
+                --relative-error-thresh {params.relative_error_thresh} \
+                --absolute-error-thresh {params.absolute_error_thresh} \
+                --excess-thresh {params.excess_thresh} \
+                --completeness-thresh {params.completeness_thresh} \
+                --checkpoint-dir {log.checkpoint_dir} \
+                {input} {output.final}
+        """
 
 rule benchmark_depth_model:
     output:
@@ -1289,6 +1398,8 @@ rule megahit_assemble_single_k:
                 for mgen in config["mgen_group"][w.group]
             ]
         ),
+    conda:
+        "conda/megahit.yaml"
     resources:
         memory_flags="--memory 0.5",
     threads: 48
@@ -1331,6 +1442,8 @@ rule megahit_assemble_k_series:
         kmin=31,
         kmax=lambda w: w.ksize,
         kstep=20,
+    conda:
+        "conda/megahit.yaml"
     threads: 48
     resources:
         memory_flags="--memory 0.5",

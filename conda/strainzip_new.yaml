@@ -1,0 +1,9 @@
+name: strainzip
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - -e /include/StrainZip

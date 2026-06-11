@@ -66,6 +66,11 @@ rule calculate_gene_mean_mapping_depth:
         gff="data/group/{group}/r.proc.megahit-full-k111.prodigal.gff",
         pos_depth="data/group/{group}/reads/{mgen}/r.proc.megahit-full-k111.position_depth.tsv",
     threads: 1
+    resources:
+        mem_mb=30_000,
+        pmem=30_000,
+        walltime_hr=2,
+    conda: "conda/sqlite.yaml"
     shell:
         """
         {input.script} {input.gff} {input.pos_depth} > {output}

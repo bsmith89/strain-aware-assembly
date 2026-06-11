@@ -11,25 +11,40 @@ localrules:
     download_pgam_hmm_db,
 
 
-rule extract_pgam_hmm_db:
+# rule extract_pgam_hmm_db:
+#     output:
+#         "ref/hmm/PGAP.hmm",
+#     input:
+#         "raw/ref/hmm_PGAP.HMM.tgz",
+#     shell:
+#         """
+#         tar -O -xzf {input} > {output}
+#         """
+#
+#
+# rule extract_single_tigrfam_model:
+#     output:
+#         "ref/hmm/TIGR{number}.hmm",
+#     input:
+#         "ref/hmm/PGAP.hmm",
+#     shell:
+#         """
+#         hmmfetch {input} TIGR{wildcards.number}.1 > {output}
+#         """
+
+rule extract_single_pgap_model:
     output:
-        "ref/hmm/PGAP.hmm",
+        "ref/hmm/{model}_{ver}.hmm",
     input:
-        "raw/ref/hmm_PGAP.HMM.tgz",
+        "ref/hmm/PGAP.hmm",
+    wildcard_constraints:
+        model=single_param_wc,
+        ver=single_param_wc,
+    params:
+        model_accession=lambda w: w.model + "." + w.ver
     shell:
         """
-        tar -O -xzf {input} > {output}
-        """
-
-
-rule extract_single_tigrfam_model:
-    output:
-        "ref/hmm/TIGR{number}.hmm",
-    input:
-        "ref/hmm/PGAP.hmm",
-    shell:
-        """
-        hmmfetch {input} TIGR{wildcards.number}.1 > {output}
+        hmmfetch {input} {params.model_accession} > {output}
         """
 
 
@@ -96,16 +111,35 @@ rule run_genomad:
         """
 
 
-rule download_mmseqs_uniref50_db:
+rule download_mmseqs_db:
     output:
-        directory("ref/mmseqs_uniref50/"),
+        "ref/mmseqs/{db}",
+    threads: 12
     conda:
         "conda/mmseqs.yaml"
-    params:
-        stem="ref/mmseqs_uniref50/db",
-    threads: 4
     shell:
-        "mkdir -p {output} && mmseqs databases --threads {threads} UniRef50 {params.stem} $TMPDIR"
+        """
+        mmseqs databases --threads {threads} {wildcards.db} {output} {resources.tmpdir}
+        """
+
+rule run_mmseqs_taxonomy:
+    output:
+        directory("{stem}.mmseqs-{db}-taxonomy.d"),
+    input:
+        db="ref/mmseqs/{db}",
+        query="{stem}.fn",
+    params:
+        sensitivity=2.0,
+    resources:
+        disk_mb=10_000,
+    conda:
+        "conda/mmseqs.yaml"
+    threads: 64
+    shell: """
+    mkdir -p {output}
+    mmseqs easy-taxonomy --threads {threads} --disk-space-limit {resources.disk_mb}M -s {params.sensitivity} {input.query} {input.db} {output}/mmseqs {resources.tmpdir}
+    """
+
 
 
 # rule run_mmseqs_taxonomy:
@@ -166,3 +200,93 @@ rule run_crispr_array_annotation_minced_postprocessing:
         """
         cctk minced -o {params.cctkdir} -p --snp-thresh {params.snp_thresh} --min-shared {params.min_shared}
         """
+
+rule eggnog_mapper_translated_orfs:
+    output:
+        directory("{stem}.emapper.d"),
+    input:
+        fasta="{stem}.tran.fa",
+        db="ref/eggnog_mapper_db",
+    params:
+        tax_scope="auto",
+        sensmode="more-sensitive",
+        mapper="diamond",
+    conda:
+        "conda/emapper.yaml"
+    threads: 48
+    resources:
+        walltime_hr=240,
+        mem_mb=20_000,
+        pmem=20_000 // 48,
+    shell:
+        """
+        tmpdir=$(mktemp -d)
+        export EGGNOG_DATA_DIR={input.db}
+        rm -rf {output}.temp
+        mkdir -p {output}.temp
+        emapper.py \
+                -m {params.mapper} \
+                -i {input.fasta} \
+                --itype proteins \
+                --sensmode {params.sensmode} \
+                --go_evidence all \
+                --dbmem \
+                --tax_scope {params.tax_scope} \
+                --temp_dir $tmpdir \
+                --override \
+                --cpu {threads} \
+                --output_dir {output}.temp \
+                --output 'proteins'
+        rm -rf {output}
+        mv {output}.temp {output}
+        """
+
+rule parse_strain_emapper_annotations_to_gene_x_unit:
+    output:
+        "{stem}.cds.emapper.gene_x_{unit}.tsv",
+    input:
+        script="scripts/parse_emapper_output_to_gene_x_{unit}.py",
+        emapper="{stem}.cds.emapper.d/proteins.emapper.annotations",
+    shell:
+        "{input.script} {input.emapper} {output}"
+
+
+rule gather_gene_seq_for_cog:
+    output:
+        nucl="{stem}.cds.{cog}.fn",
+    wildcard_constraints:
+        cog="COG[0-9]+"
+    input:
+        emapper_cog_annot="{stem}.cds.emapper.gene_x_cog.tsv",
+        nucl="{stem}.cds.fn",
+    conda:
+        "conda/seqtk.yaml"
+    shell:
+        """
+        seqtk subseq {input.nucl} <(grep '{wildcards.cog}' {input.emapper_cog_annot} | cut -f1) > {output.nucl}
+        """
+
+rule codonalign:
+    output: "{stem}.codonalign.afn"
+    input:
+        prot="{stem}.tran.muscle.afa",
+        nucl="{stem}.fn"
+    conda:
+        "conda/compbio_scripts.yaml"
+    shell: "codonalign {input.prot} {input.nucl} > {output}"
+
+
+rule infer_codon_phylogeny:
+    output: "{stem}.codonalign.nucl.nwk",
+    input: "{stem}.codonalign.afn"
+    shell: "fasttree -nt < {input} > {output}"
+
+rule tree_sort_afn:
+    output: "{stem}.tree-sort.afn"
+    input:
+        script="scripts/get_ordered_leaves.py",
+        tree="{stem}.nucl.nwk",
+        seqs="{stem}.afn"
+    conda:
+        "conda/compbio_scripts.yaml"
+    shell: "fetch_seqs --match-order <({input.script} {input.tree}) {input.seqs} > {output}"

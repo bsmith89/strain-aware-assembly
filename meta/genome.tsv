@@ -124,3 +124,8 @@ Tyzzerella-nexilis-DSM-1787_MAF-2	100148	raw/genome/xjin/Tyzzerella-nexilis-DSM-
 Veillonella-dispar-ATCC-17748_MAF-2	100214	raw/genome/xjin/Veillonella-dispar-ATCC-17748_MAF-2.fa	xjin_100214_a	Dominated by 100214 (27437), but many GT-Pro SNPs in 103190 (867), 101349 (735), 101444 (270) and then a handful in 10ish other species;
 Veillonella-sp-3-1-44_MAF-2	101349	raw/genome/xjin/Veillonella-sp-3-1-44_MAF-2.fa	xjin_101349_a	Veillonella_parvula;
 Veillonella-sp-6-1-27_MAF-2	101349	raw/genome/xjin/Veillonella-sp-6-1-27_MAF-2.fa	xjin_101349_b	Veillonella_parvula;
+ecoli_mg1655	102506	raw/genbank/GCA_000005845.2_ASM584v2.fn		
+ecoli_o121h19	102506	raw/genbank/GCA_005037715.2_ASM503771v2.fn		
+ecoli_0157h7	102506	raw/genbank/GCA_000008865.2_ASM886v2.fn		
+ecoli_14ec020	102506	raw/genbank/GCA_002853715.1_ASM285371v1.fn		
+ecoli_atcc11775	102506	raw/genbank/GCA_002853715.1_ASM285371v1.fn		

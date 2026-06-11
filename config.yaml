@@ -1,6 +1,6 @@
 container:
-  default: 'docker://bsmith89/compbio2:5cbda6bd9437faaa46546c71b3a2afb961ba5376'
-  toolz: 'docker://bsmith89/compbio2:5cbda6bd9437faaa46546c71b3a2afb961ba5376'
+  default: 'docker://bsmith89/compbio2:4acb0fef295d8e4f99c9b3cd4385061889a03e93'
+  toolz: 'docker://bsmith89/compbio2:4acb0fef295d8e4f99c9b3cd4385061889a03e93'
   mambaforge: 'docker://condaforge/mambaforge:4.11.0-4'
   jfish: 'docker://bsmith89/jellyfish:435ac5c9499c6e4c92936884c5e549cd73816fdc'
   ggcat: 'docker://bsmith89/ggcat:b657181897818ef29813bc11475abc5a9ed8c764'

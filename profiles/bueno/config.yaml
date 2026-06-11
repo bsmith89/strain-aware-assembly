@@ -1,4 +1,4 @@
-rerun-triggers: ['mtime', 'params', 'input', 'software-env', 'code']
+rerun-triggers: ['mtime', 'params', 'input', 'code']
 notemp: true
 printshellcmds: true
 keep-going: true
@@ -16,4 +16,4 @@ config:
   - 'USE_CUDA=0'
   - 'MAX_THREADS=24'
   - 'jupyter_port=8818'
-  - 'server_port=8819'
+  - 'server_port=8820'

@@ -3,6 +3,7 @@ notemp: true
 printshellcmds: true
 keep-going: true
 resources: ['network_connections=3', 'mem_mb=500000']
+scheduler: "greedy"
 use-conda: true
 conda-frontend: 'mamba'
 use-apptainer: true

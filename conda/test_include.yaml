@@ -1,0 +1,8 @@
+name: test_include2
+channels:
+  - conda-forge
+dependencies:
+  - pip
+  - pip:
+    - -e /include/test_include
+

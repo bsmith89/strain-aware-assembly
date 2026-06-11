@@ -41,7 +41,7 @@ rule start_jupyter:
     conda:
         "conda/jupyter.yaml"
     shell:
-        "jupyter lab --port={params.port} --notebook-dir nb/"
+        "export PROJECT_ROOT={config[PROJECT_ROOT]}; jupyter lab --port={params.port} --notebook-dir nb/"
 
 
 rule start_ipython:

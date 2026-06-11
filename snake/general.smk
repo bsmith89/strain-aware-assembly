@@ -91,8 +91,9 @@ rule denovo_align_fa:
         "{stem}.muscle.afa",
     input:
         "{stem}.fa",
+    threads: 12
     shell:
-        "muscle < {input} > {output}"
+        "muscle -threads {threads} -align {input} -output {output}"
 
 
 rule hmmbuild:

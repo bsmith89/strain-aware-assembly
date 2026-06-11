@@ -34,7 +34,7 @@ CREATE TABLE depth (
 .import $depth_pipe depth
 
 SELECT
-    seqid || "[" || left || "-" || right || "]" || strand AS gene_name
+    seqid || '[' || left || '-' || right || ']' || strand AS gene_name
   , (1.0 * SUM(depth)) / (right - left) AS depth
 FROM depth
 JOIN gene USING (seqid)

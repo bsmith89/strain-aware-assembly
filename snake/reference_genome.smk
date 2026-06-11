@@ -22,31 +22,33 @@ localrules:
     download_genbank_genome,
 
 
-def alias_genbank_genome_input(w):
-    accession, assembly = config["genomes"].loc[(w.species, w.strain)][
-        ["genbank", "assembly"]
-    ]
-    return f"raw/genbank/{accession}_{assembly}.fn"
-
-
-rule alias_genbank_genome:
-    output:
-        "data/genbank/{species}.{strain}.fn",
-    input:
-        alias_genbank_genome_input,
-    shell:
-        alias_recipe
-
+# def alias_genbank_genome_input(w):
+#     accession, assembly = config["genomes"].loc[(w.species, w.strain)][
+#         ["genbank", "assembly"]
+#     ]
+#     return f"raw/genbank/{accession}_{assembly}.fn"
+#
+#
+# rule alias_genbank_genome:
+#     output:
+#         "data/genome/{species}.{strain}.fn",
+#     input:
+#         alias_genbank_genome_input,
+#     shell:
+#         alias_recipe
+#
 
 rule standardize_contig_naming_project_reference_genome:
     output:
         "data/genome/{genome}.fn",
     input:
         lambda w: config["genome"].loc[w.genome].genome_path,
-    wildcard_constraints:
-        genome=noperiod_wc,
+    # wildcard_constraints:
+    #     genome=noperiod_wc,
     shell:
-        "sed '/>/s:>\(.*\):>{wildcards.genome}_\\1:' {input} > {output}"
+        """
+        awk -v genome={wildcards.genome} 'BEGIN {{contig=1}} /^>/ {{print ">" genome "_" contig; contig++}} !/^>/ {{print $0}}' {input} > {output}
+        """
 
 
 rule normalize_genome_sequence:

@@ -7,3 +7,6 @@
 [submodule "include/compbio-scripts"]
 	path = include/compbio-scripts
 	url = git@github.com:bsmith89/compbio-scripts.git
+[submodule "include/CodonAlign"]
+	path = include/CodonAlign
+	url = https://github.com/santiagosnchez/CodonAlign.git
